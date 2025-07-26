@@ -1,5 +1,6 @@
-#include <iostream>
+#include "board.hpp"
 
 int main() {
-	std::cout << "test" << std::endl;
+	PrintBoard();
+	SetBoard("test board");
 }
