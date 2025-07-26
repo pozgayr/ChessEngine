@@ -1,8 +1,8 @@
 #include "board.hpp"
 
 void Board::setBit(uint64_t &bb, int square) {
-	bb |= (1ULL << square);
-}
+	bb |= (1ULL << square); //1ULL -  1 unsigned long long (64b)
+}							//shifted right by the square positions
 
 void Board::printBoard() {
 	char display[board_size];
@@ -14,10 +14,9 @@ void Board::printBoard() {
 		uint64_t bb = bitboards[p];
 
 		while (bb) {
-			int square = __builtin_ctzll(bb);
-
+			int square = __builtin_ctzll(bb); //count trailing zeroes (hw instruct) 
 			display[square] = piece_chars[p];
-			bb &= bb - 1;
+			bb &= bb - 1; //remove lsb
 		}
 	}
 
@@ -60,7 +59,7 @@ void Board::setBoard(const std::string& fen) {
 			continue;
 		}
 		else if (isdigit(c)) {
-			square += (c - '0');
+			square += (c - '0'); //trick for getting the value of the number from string
 		} else {
 			switch(c) {
 				case 'P': setBit(bitboards[P], square); break;
