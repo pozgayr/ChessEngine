@@ -9,6 +9,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 set(SOURCES
 	src/main.cpp
 	src/board.cpp
+	src/interface.cpp
 )
 
 add_executable(chess_engine ${SOURCES})
