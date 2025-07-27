@@ -5,13 +5,13 @@
 #include <iostream>
 #include <string>
 
-const bool white_to_move = true;
-const bool black_to_move = false;
-const int bitboard_count = 12;
-const int occupancy_count = 3;
-const int a8 = 56;
-const int size = 8;
-const int board_size = 64;
+constexpr bool white_to_move = true;
+constexpr bool black_to_move = false;
+constexpr int bitboard_count = 12;
+constexpr int occupancy_count = 3;
+constexpr int a8 = 56;
+constexpr int size = 8;
+constexpr int board_size = 64;
 
 
 enum Pieces {
