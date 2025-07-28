@@ -1,9 +1,12 @@
 #include "movegen.hpp"
 #include <bit>
 
-void MoveGenerator::pawnMoves(const Board &board) {
+void MoveGenerator::genMoves(const Board &board) {
 	moves.clear();
+	pawnMoves(board);
+}
 
+void MoveGenerator::pawnMoves(const Board &board) {
 	uint64_t white = board.bitboards[P];
 	uint64_t black = board.bitboards[p];
 	uint64_t empty = ~board.occupancies[all];

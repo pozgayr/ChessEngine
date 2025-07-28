@@ -97,13 +97,3 @@ void Board::makeMove(const Move& move) {
 	}
 	
 }
-
-std::string squareNotation(int square) {
-	int file = square % 8;
-	int rank = square / 8;
-
-	char fileChar = 'a' + file;
-	char rankChar = '1' + rank;
-
-	return std::string{fileChar, rankChar}; 
-}

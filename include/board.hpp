@@ -23,6 +23,7 @@ enum Pieces {
 enum Occupancies { white, black, all };
 
 std::string squareNotation(int square);
+int numberFromSquare(std::string);
 
 class Board {
 	private:
