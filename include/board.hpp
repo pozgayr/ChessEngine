@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include "move.hpp"
 
 constexpr bool white_to_move = true;
 constexpr bool black_to_move = false;
@@ -19,18 +20,21 @@ enum Pieces {
 	p, n, b, r, q, k
 };
 
+enum Occupancies { white, black, all };
+
 class Board {
 	private:
-		uint64_t bitboards[bitboard_count] = {0};
-		uint64_t occupancies[occupancy_count] = {0};
-		bool side_to_move = white_to_move;
-
 		void updateOccupancies();
 		void setBit(uint64_t &bb, int square);
 		
 	public:
+		uint64_t bitboards[bitboard_count] = {0};
+		uint64_t occupancies[occupancy_count] = {0};
+		bool side_to_move = white_to_move;
+		
 		void printBoard();
 		void setBoard(const std::string& fen);
+		void makeMove(const Move& move);
 };
 
 #endif

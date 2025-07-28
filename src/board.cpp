@@ -31,13 +31,13 @@ void Board::printBoard() {
 }
 
 void Board::updateOccupancies() {
-	occupancies[0] = bitboards[P] | bitboards[N] | bitboards[B] |
+	occupancies[black] = bitboards[P] | bitboards[N] | bitboards[B] |
 					 bitboards[R] | bitboards[Q] | bitboards[K];
 					 
-	occupancies[1] = bitboards[p] | bitboards[n] | bitboards[b] |
+	occupancies[white] = bitboards[p] | bitboards[n] | bitboards[b] |
 				     bitboards[r] | bitboards[q] | bitboards[k];
 
-	occupancies[2] = occupancies[0] | occupancies[1];  
+	occupancies[all] = occupancies[white] | occupancies[black];  
 }
 
 void Board::setBoard(const std::string& fen) {
@@ -83,6 +83,13 @@ void Board::setBoard(const std::string& fen) {
 	if (i < fen.length()) {
 		side_to_move = (fen[i] == 'b') ? black_to_move : white_to_move;
 	}
+	updateOccupancies();
+}
 
+void Board::makeMove(const Move& move) {
+	bitboards[move.piece] &= ~(1ULL << move.from);
+	bitboards[move.piece] |= (1ULL << move.to);
+
+	side_to_move = !side_to_move;
 	updateOccupancies();
 }

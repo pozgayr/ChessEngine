@@ -1,3 +1,6 @@
+#ifndef INTERFACE_HPP
+#define INTERFACE_HPP
+
 #include "board.hpp"
 #include <string>
 #include <vector>
@@ -28,3 +31,5 @@ class Interface {
 
 		std::vector<std::string> split(const std::string& line, char delimiter = ' ');
 };
+
+#endif
