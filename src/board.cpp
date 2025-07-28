@@ -87,9 +87,23 @@ void Board::setBoard(const std::string& fen) {
 }
 
 void Board::makeMove(const Move& move) {
-	bitboards[move.piece] &= ~(1ULL << move.from);
-	bitboards[move.piece] |= (1ULL << move.to);
 
-	side_to_move = !side_to_move;
-	updateOccupancies();
+	if (bitboards[move.piece] & (1ULL << move.from)) {
+		bitboards[move.piece] &= ~(1ULL << move.from);
+		bitboards[move.piece] |= (1ULL << move.to);
+	
+		side_to_move = !side_to_move;
+		updateOccupancies();
+	}
+	
+}
+
+std::string squareNotation(int square) {
+	int file = square % 8;
+	int rank = square / 8;
+
+	char fileChar = 'a' + file;
+	char rankChar = '1' + rank;
+
+	return std::string{fileChar, rankChar}; 
 }

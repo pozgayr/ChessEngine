@@ -22,6 +22,8 @@ enum Pieces {
 
 enum Occupancies { white, black, all };
 
+std::string squareNotation(int square);
+
 class Board {
 	private:
 		void updateOccupancies();

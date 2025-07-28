@@ -6,7 +6,7 @@
 int main() {
 
 	Board board;
-	board.setBoard("8/8/8/8/8/3PP3/8/8 b KQkq - 0 1");
+	board.setBoard("8/8/8/8/8/8/1P6/8 b KQkq - 0 1");
 	board.printBoard();
 	MoveGenerator moveGen;
 	moveGen.pawnMoves(board);
@@ -15,5 +15,7 @@ int main() {
 	    board.makeMove(m);
 	    board.printBoard();
 	}
+
+	std::cout << squareNotation(63) << '\n';
 	return 0;
 }
