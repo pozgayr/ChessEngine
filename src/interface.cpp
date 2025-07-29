@@ -6,6 +6,7 @@ CommandType getCommand(const std::string& cmd) {
     if (cmd == print_cmd) return CommandType::PRINT;
     if (cmd == quit_cmd || cmd == quit_cmd_short) return CommandType::QUIT;
     if (cmd == move_cmd) return CommandType::MOVE;
+    if (cmd == allmoves_cmd) return CommandType::ALLMOVES;
     return CommandType::UNKNOWN;
 }
 
@@ -47,6 +48,9 @@ void Interface::executeCommand(const std::vector<std::string>& args, bool& quit)
 		    break;
 		case CommandType::MOVE:
 			cmdMakeMove(args);
+			break;
+		case CommandType::ALLMOVES:
+			cmdDisplayMoves();
 			break;
 		case CommandType::UNKNOWN:
 		default:
@@ -106,6 +110,7 @@ void Interface::cmdHelp() {
               << "  position fen \"<FEN>\" - Load position from FEN\n"
               << "  print                  - Print board\n"
               << "  move fromto            - Make a move eg.e4e5\n"
+              << "  allmoves               - display all moves\n"
               << "  quit / q               - Exit\n";
 }
 
@@ -141,6 +146,11 @@ void Interface::cmdMakeMove(const std::vector<std::string>& args) {
 	    }
 	}
 	std::cout << "Invalid move\n";
+}
+
+void Interface::cmdDisplayMoves() {
+	moveGen.genMoves(board);
+	printMoves(moveGen.moves);
 }
 
 std::string Interface::squareToNotation(int square) {

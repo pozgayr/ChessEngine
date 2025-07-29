@@ -14,9 +14,10 @@ const std::string help_cmd_short = "h";
 const std::string set_position_cmd = "position";
 const std::string print_cmd = "print";
 const std::string move_cmd = "move";
+const std::string allmoves_cmd = "allmoves";
 const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-enum class CommandType { HELP, POSITION, PRINT, QUIT, MOVE, UNKNOWN };
+enum class CommandType { HELP, POSITION, PRINT, QUIT, MOVE, ALLMOVES, UNKNOWN };
 
 CommandType getCommand(const std::string& cmd);
 
@@ -38,6 +39,7 @@ class Interface {
 		void cmdPrint();
 		void cmdHelp();
 		void cmdMakeMove(const std::vector<std::string>& args);
+		void cmdDisplayMoves();
 
 		std::vector<std::string> split(const std::string& line, char delimiter = ' ');
 };
