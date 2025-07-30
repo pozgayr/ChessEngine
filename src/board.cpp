@@ -1,4 +1,5 @@
 #include "board.hpp"
+#include "interface.hpp"
 
 void Board::setBit(uint64_t &bb, int square) {
 	bb |= (1ULL << square); //1ULL -  1 unsigned long long (64b)
@@ -45,21 +46,19 @@ void Board::setBoard(const std::string& fen) {
 	for (int i = 0; i < occupancy_count; i++) occupancies[i] = 0;
 
 
-	int square = a8;
-	size_t i = 0;
+	enpassant = 0ULL;
+	side_to_move = WHITE;
 	
-	for (; i < fen.length(); i++) {
-		char c = fen[i];
+	int square = a8;
+	size_t idx = 0;
 
-		if (c == ' ') {
-			break;
-		}
-		else if (c == '/') {
+	while (idx < fen.length() && fen[idx] != ' ') {
+		char c = fen[idx];
+
+		if (c == '/') {
 			square -= size * 2;
-			continue;
-		}
-		else if (isdigit(c)) {
-			square += (c - '0'); //trick for getting the value of the number from string
+		} else if (isdigit(c)) {
+			square += (c - '0');
 		} else {
 			switch(c) {
 				case 'P': setBit(bitboards[P], square); break;
@@ -77,12 +76,27 @@ void Board::setBoard(const std::string& fen) {
 			}
 			square++;
 		}
+		idx++;
 	}
-	i++;
+	idx++;
 
-	if (i < fen.length()) {
-		side_to_move = (fen[i] == 'b') ? BLACK : WHITE;
+	if (idx < fen.length()) {
+		side_to_move = (fen[idx] == 'b') ? BLACK : WHITE;
 	}
+	idx+=2;
+	
+	while (idx < fen.size() && fen[idx] != ' ') {
+	    idx++;
+	}
+	idx++;
+
+	if (fen[idx] != '-') {
+		std::string enpassant_square_str = fen.substr(idx, 2);
+		int enpassant_square = Interface::notationToSquare(enpassant_square_str);
+		enpassant = 1ULL << enpassant_square;
+		idx += 2;
+	}
+	
 	updateOccupancies();
 }
 

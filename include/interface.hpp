@@ -17,7 +17,7 @@ const std::string move_cmd = "move";
 const std::string allmoves_cmd = "allmoves";
 const std::string setside_cmd = "side";
 const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const std::string pawn_test = "8/2p5/8/3P4/4p3/8/5P2/8 b KQkq - 0 1";
+const std::string pawn_test = "rnbqkbnr/ppppp1pp/8/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 2";
 
 enum class CommandType { HELP, POSITION, PRINT, QUIT, MOVE, 
 						ALLMOVES, SIDE, UNKNOWN };
