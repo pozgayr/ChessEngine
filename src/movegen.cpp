@@ -90,4 +90,13 @@ void MoveGenerator::pawnMoves(const Board &board, uint64_t pawns, Color side) {
 		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
 		moves.push_back({from, to, pawn_piece, 0, 1});
 	}
+
+	uint64_t enpassant_right = (side == WHITE) ? ((pawns << (size + 1)) & ~fileH & board.enpassant)
+											   : ((pawns >> (size + 1)) & ~fileA & board.enpassant);
+
+	if (enpassant_right) {
+		int to = __builtin_ctzll(enpassant_right);
+		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
+		moves.push_back({from, to, pawn_piece, 0, 1});
+	}
 }

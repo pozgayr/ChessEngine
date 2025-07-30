@@ -132,7 +132,11 @@ void Interface::cmdHelp() {
               << "  position fen \"<FEN>\" - Load position from FEN\n"
               << "  print                  - Print board\n"
               << "  move fromto            - Make a move eg.e4e5\n"
-              << "  allmoves               - display all moves\n"
+              << "  move fromtop           - Make a move proting to piece p\n"
+              << "  eg.e7e8b promoting to bishop\n"
+              //TODO: if no argument is last promote to queen
+              << "  allmoves               - Display all moves\n"
+              << "  side w/b               - Set side to move\n"
               << "  quit / q               - Exit\n";
 }
 
