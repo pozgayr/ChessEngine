@@ -16,7 +16,7 @@ const std::string print_cmd = "print";
 const std::string move_cmd = "move";
 const std::string allmoves_cmd = "allmoves";
 const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const std::string pawn_test = "8/PPPPPPPP/8/2P5/1p6/8/pppppppp/8 w KQkq - 0 1";
+const std::string pawn_test = "8/7p/P7/p7/7P/8/8/P7 w KQkq - 0 1";
 
 enum class CommandType { HELP, POSITION, PRINT, QUIT, MOVE, ALLMOVES, UNKNOWN };
 

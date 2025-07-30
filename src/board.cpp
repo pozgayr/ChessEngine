@@ -31,10 +31,10 @@ void Board::printBoard() {
 }
 
 void Board::updateOccupancies() {
-	occupancies[black] = bitboards[P] | bitboards[N] | bitboards[B] |
+	occupancies[white] = bitboards[P] | bitboards[N] | bitboards[B] |
 					 bitboards[R] | bitboards[Q] | bitboards[K];
 					 
-	occupancies[white] = bitboards[p] | bitboards[n] | bitboards[b] |
+	occupancies[black] = bitboards[p] | bitboards[n] | bitboards[b] |
 				     bitboards[r] | bitboards[q] | bitboards[k];
 
 	occupancies[all] = occupancies[white] | occupancies[black];  
@@ -91,11 +91,17 @@ void Board::makeMove(const Move& move) {
 	if (bitboards[move.piece] & (1ULL << move.from)) {
 		bitboards[move.piece] &= ~(1ULL << move.from);
 
-		if (move.promotion != 0) {
-	        bitboards[move.promotion] |= (1ULL << move.to);
-	    } else {
+		for (int i = 0; i < bitboard_count; i++) {
+			if (bitboards[i] & (1ULL << move.to)) {
+				bitboards[i] &= ~(1ULL << move.to);
+				break;
+			}
+		}
 
-	        bitboards[move.piece] |= (1ULL << move.to);
+		if (move.promotion != 0) {
+	        bitboards[move.promotion] |= (1ULL << move.to); 
+	    } else {
+			bitboards[move.piece] |= (1ULL << move.to);
 	    }
 	
 		side_to_move = (side_to_move == WHITE) ? BLACK : WHITE;

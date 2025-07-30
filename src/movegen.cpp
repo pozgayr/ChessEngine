@@ -61,4 +61,24 @@ void MoveGenerator::pawnMoves(const Board &board, uint64_t pawns, Color side) {
 		moves.push_back({from, to, pawn_piece, 0, 0});
 		double_push &= double_push - 1;
 	}
+
+	uint64_t left_capture = (side == WHITE) ? ((pawns << (size - 1)) & ~fileA & opponent)
+											: ((pawns >> (size - 1)) & ~fileH & opponent);
+
+	while (left_capture) {
+		int to = __builtin_ctzll(left_capture);
+		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
+		moves.push_back({from, to, pawn_piece, 0, 0});
+		left_capture &= left_capture - 1;
+	}
+
+	uint64_t right_capture = (side == WHITE) ? ((pawns << (size + 1)) & ~fileH & opponent)
+											 : ((pawns >> (size + 1)) & ~fileA & opponent);
+
+	while (right_capture) {
+		int to = __builtin_ctzll(right_capture);
+		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
+		moves.push_back({from, to, pawn_piece, 0, 0});
+		right_capture &= right_capture - 1;
+	}
 }
