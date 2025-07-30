@@ -7,6 +7,7 @@ CommandType getCommand(const std::string& cmd) {
     if (cmd == quit_cmd || cmd == quit_cmd_short) return CommandType::QUIT;
     if (cmd == move_cmd) return CommandType::MOVE;
     if (cmd == allmoves_cmd) return CommandType::ALLMOVES;
+    if (cmd == setside_cmd) return CommandType::SIDE;
     return CommandType::UNKNOWN;
 }
 
@@ -52,6 +53,9 @@ void Interface::executeCommand(const std::vector<std::string>& args, bool& quit)
 		case CommandType::ALLMOVES:
 			cmdDisplayMoves();
 			break;
+		case CommandType::SIDE:
+			cmdSwitchSide(args);
+			break;
 		case CommandType::UNKNOWN:
 		default:
 			std::cout << "Unknown command: " << args.at(0) << "\n";
@@ -84,6 +88,22 @@ std::vector<std::string> Interface::split(const std::string& line, char delimite
 	}
 	return tokens;
 }
+
+void Interface::cmdSwitchSide(const std::vector<std::string>& args) {
+	if (args.size() < 2) {
+		std::cout << "Error: side requires exactly 2 arguments\n";
+		return;
+	}
+
+	if (args.at(1) == "white" || args.at(1) == "w") {
+		board.side_to_move = WHITE;
+		return;
+	} else if (args.at(1) == "black" || args.at(1) == "b") {
+		board.side_to_move = BLACK;
+		return;
+	}
+	std::cout << "Error unknown side argument\n";
+} 
 
 void Interface::cmdSetPosition(const std::vector<std::string>& args) {
 	if (args.size() < 2) {
@@ -166,6 +186,7 @@ Move Interface::parseMoveInput(const std::string &input, Color side) {
            case 'n': m.promotion = (side == WHITE) ? N : n; break;
        }
    }
+
    return m;
 }
 

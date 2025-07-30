@@ -32,6 +32,7 @@ class Board {
 	public:
 		uint64_t bitboards[bitboard_count] = {0};
 		uint64_t occupancies[occupancy_count] = {0};
+		uint64_t enpassant = 0;
 		Color side_to_move = WHITE;
 		
 		void printBoard();

@@ -89,19 +89,29 @@ void Board::setBoard(const std::string& fen) {
 void Board::makeMove(const Move& move) {
 
 	if (bitboards[move.piece] & (1ULL << move.from)) {
-		bitboards[move.piece] &= ~(1ULL << move.from);
+		bitboards[move.piece] &= ~(1ULL << move.from); //remove from original position
 
 		for (int i = 0; i < bitboard_count; i++) {
 			if (bitboards[i] & (1ULL << move.to)) {
-				bitboards[i] &= ~(1ULL << move.to);
+				bitboards[i] &= ~(1ULL << move.to); //remove piece if present at the target location
 				break;
 			}
 		}
 
-		if (move.promotion != 0) {
-	        bitboards[move.promotion] |= (1ULL << move.to); 
-	    } else {
-			bitboards[move.piece] |= (1ULL << move.to);
+		bitboards[move.piece] |= (1ULL << move.to); //place piece
+
+	    if (move.piece == P && (move.to - move.from) == size * 2) { //hadle enpassant bitboard update
+	    	enpassant = (1ULL << (move.from + size)); 
+	    } else if (move.piece == p && (move.from - move.to) == size * 2) {
+	    	enpassant = (1ULL << (move.from - size));
+	    }
+
+	    if (move.enpassant) {
+	    	if (side_to_move == WHITE) {
+	    		bitboards[p] &= ~((1ULL << move.to) >> size);
+	    	} else {
+	    		bitboards[P] &= ~((1ULL << move.to) << size);
+	    	}
 	    }
 	
 		side_to_move = (side_to_move == WHITE) ? BLACK : WHITE;

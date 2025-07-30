@@ -11,8 +11,7 @@ struct Move {
  	bool operator==(const Move &other) const {
 	    return from == other.from &&
 	        to == other.to &&
-	        promotion == other.promotion &&
-	        enpassant == other.enpassant;
+	        promotion == other.promotion;
     }
 };
 

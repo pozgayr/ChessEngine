@@ -51,9 +51,9 @@ void MoveGenerator::pawnMoves(const Board &board, uint64_t pawns, Color side) {
 		normal_push &= normal_push - 1;
 	}
 
-	uint64_t double_push = ((pawns & start_rank) << (double_shift > 0 ? double_shift : 0)) & empty &
-	                      ((side == WHITE) ? (empty << 8) : (empty >> 8));
-	if (side == BLACK) double_push >>= (double_shift < 0 ? -double_shift : 0);
+	uint64_t double_push = (side == WHITE) ? (((pawns & start_rank) << (size * 2)) & empty 
+						 & (empty << 8)) : (((pawns & start_rank) 
+						 >> (size * 2)) & empty & (empty >> 8));   
 
 	while (double_push) {
 		int to = __builtin_ctzll(double_push);
@@ -80,5 +80,14 @@ void MoveGenerator::pawnMoves(const Board &board, uint64_t pawns, Color side) {
 		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
 		moves.push_back({from, to, pawn_piece, 0, 0});
 		right_capture &= right_capture - 1;
+	}
+
+	uint64_t enpassant_left = (side == WHITE) ? ((pawns << (size - 1)) & ~fileA & board.enpassant)
+											  : ((pawns >> (size - 1)) & ~fileH & board.enpassant);
+											  
+	if (enpassant_left) {
+		int to = __builtin_ctzll(enpassant_left);
+		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
+		moves.push_back({from, to, pawn_piece, 0, 1});
 	}
 }

@@ -15,10 +15,12 @@ const std::string set_position_cmd = "position";
 const std::string print_cmd = "print";
 const std::string move_cmd = "move";
 const std::string allmoves_cmd = "allmoves";
+const std::string setside_cmd = "side";
 const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const std::string pawn_test = "8/7p/P7/p7/7P/8/8/P7 w KQkq - 0 1";
+const std::string pawn_test = "8/2p5/8/3P4/4p3/8/5P2/8 b KQkq - 0 1";
 
-enum class CommandType { HELP, POSITION, PRINT, QUIT, MOVE, ALLMOVES, UNKNOWN };
+enum class CommandType { HELP, POSITION, PRINT, QUIT, MOVE, 
+						ALLMOVES, SIDE, UNKNOWN };
 
 CommandType getCommand(const std::string& cmd);
 
@@ -43,6 +45,7 @@ class Interface {
 		void cmdHelp();
 		void cmdMakeMove(const std::vector<std::string>& args);
 		void cmdDisplayMoves();
+		void cmdSwitchSide(const std::vector<std::string>& args);
 
 		std::vector<std::string> split(const std::string& line, char delimiter = ' ');
 };
