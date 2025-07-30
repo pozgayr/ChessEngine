@@ -81,7 +81,7 @@ void Board::setBoard(const std::string& fen) {
 	i++;
 
 	if (i < fen.length()) {
-		side_to_move = (fen[i] == 'b') ? black_to_move : white_to_move;
+		side_to_move = (fen[i] == 'b') ? BLACK : WHITE;
 	}
 	updateOccupancies();
 }
@@ -90,9 +90,15 @@ void Board::makeMove(const Move& move) {
 
 	if (bitboards[move.piece] & (1ULL << move.from)) {
 		bitboards[move.piece] &= ~(1ULL << move.from);
-		bitboards[move.piece] |= (1ULL << move.to);
+
+		if (move.promotion != 0) {
+	        bitboards[move.promotion] |= (1ULL << move.to);
+	    } else {
+
+	        bitboards[move.piece] |= (1ULL << move.to);
+	    }
 	
-		side_to_move = !side_to_move;
+		side_to_move = (side_to_move == WHITE) ? BLACK : WHITE;
 		updateOccupancies();
 	}
 	

@@ -6,8 +6,6 @@
 #include <string>
 #include "move.hpp"
 
-constexpr bool white_to_move = true;
-constexpr bool black_to_move = false;
 constexpr int bitboard_count = 12;
 constexpr int occupancy_count = 3;
 constexpr int a8 = 56;
@@ -21,6 +19,7 @@ enum Pieces {
 };
 
 enum Occupancies { white, black, all };
+enum Color { WHITE = 1, BLACK = 0 };
 
 std::string squareNotation(int square);
 int numberFromSquare(std::string);
@@ -33,7 +32,7 @@ class Board {
 	public:
 		uint64_t bitboards[bitboard_count] = {0};
 		uint64_t occupancies[occupancy_count] = {0};
-		bool side_to_move = white_to_move;
+		Color side_to_move = WHITE;
 		
 		void printBoard();
 		void setBoard(const std::string& fen);

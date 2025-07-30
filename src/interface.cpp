@@ -92,6 +92,8 @@ void Interface::cmdSetPosition(const std::vector<std::string>& args) {
 	}
 	if (args.at(1) == "startpos") {
 		board.setBoard(start_pos);
+	} else if (args.at(1) == "pawntest") {
+		board.setBoard(pawn_test);	
 	} else if (args.at(1) == "fen") {
 		if (args.size() < 3) {
 			std::cout << "Error: position fen requires at least 3 arguments\n";
@@ -124,24 +126,19 @@ void Interface::cmdMakeMove(const std::vector<std::string>& args) {
 		return;
 	}
 	
-	std::string move = args.at(1);
-	std::string from_str = move.substr(0,2);
-	std::string to_str = move.substr(2,2);
+	Move move = parseMoveInput(args.at(1), board.side_to_move);
 
-	int from = notationToSquare(from_str);
-	int to = notationToSquare(to_str);
-
-	if (from == -1 || to == -1) {
-		std::cout << "Invalid squares: " << from_str << " " << to_str << "\n";
+	 if (move.from == -1 || move.to == -1) {
+   		std::cout << "Invalid squares entered\n";
         return;
-	}
+   	}
 
 	moveGen.genMoves(board);
 	
 	for (const auto& m : moveGen.moves) {
-	    if (m.from == from && m.to == to) {
+	    if (m == move) {
 	        board.makeMove(m);
-	        std::cout << "Move applied: " << from_str << to_str << "\n";
+	        board.printBoard();
 	        return;
 	    }
 	}
@@ -151,6 +148,25 @@ void Interface::cmdMakeMove(const std::vector<std::string>& args) {
 void Interface::cmdDisplayMoves() {
 	moveGen.genMoves(board);
 	printMoves(moveGen.moves);
+}
+
+Move Interface::parseMoveInput(const std::string &input, Color side) {
+	Move m;
+
+	m.from = notationToSquare(input.substr(0, 2));
+    m.to = notationToSquare(input.substr(2, 2));
+	m.promotion = 0;
+	m.enpassant = 0;
+   	
+    if (input.size() == 5) {
+       switch (input[4]) {
+           case 'q': m.promotion = (side == WHITE) ? Q : q; break;
+           case 'r': m.promotion = (side == WHITE) ? R : r; break;
+           case 'b': m.promotion = (side == WHITE) ? B : b; break;
+           case 'n': m.promotion = (side == WHITE) ? N : n; break;
+       }
+   }
+   return m;
 }
 
 std::string Interface::squareToNotation(int square) {
@@ -163,7 +179,24 @@ std::string Interface::squareToNotation(int square) {
 	return std::string{file_char, rank_char}; 
 }
 
-int Interface::notationToSquare(std::string &square) { 
+std::string Interface::moveToNotation(Move &move) {
+	std::string moveNotation = squareToNotation(move.from) + squareToNotation(move.to);
+
+	if (move.promotion) {
+		char promoChar;
+		switch (move.promotion) {
+	        case Q: case q: promoChar = 'q'; break;
+	        case R: case r: promoChar = 'r'; break;
+	        case B: case b: promoChar = 'b'; break;
+	        case N: case n: promoChar = 'n'; break;
+	        default: promoChar = '?'; break;
+		}
+		moveNotation += promoChar;
+	}
+	return moveNotation;
+}
+
+int Interface::notationToSquare(const std::string &square) { 
 	if (square.size() != 2) return -1;
 	
 	char file_char = square.at(0);
@@ -180,6 +213,6 @@ int Interface::notationToSquare(std::string &square) {
 
 void Interface::printMoves(std::vector<Move>& moves) {
 	for (size_t i = 0; i < moves.size(); i++) {
-		std::cout << squareToNotation(moves[i].from) << squareToNotation(moves[i].to) << "\n";
+		std::cout << moveToNotation(moves[i]) << "\n";	
 	}
 }

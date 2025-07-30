@@ -5,7 +5,15 @@ struct Move {
 	int from;
 	int to;
 	int piece;
-	int flags;
+	int promotion;
+	bool enpassant;
+
+ 	bool operator==(const Move &other) const {
+	    return from == other.from &&
+	        to == other.to &&
+	        promotion == other.promotion &&
+	        enpassant == other.enpassant;
+    }
 };
 
 #endif

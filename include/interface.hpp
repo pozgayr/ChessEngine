@@ -16,6 +16,7 @@ const std::string print_cmd = "print";
 const std::string move_cmd = "move";
 const std::string allmoves_cmd = "allmoves";
 const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+const std::string pawn_test = "8/PPPPPPPP/8/2P5/1p6/8/pppppppp/8 w KQkq - 0 1";
 
 enum class CommandType { HELP, POSITION, PRINT, QUIT, MOVE, ALLMOVES, UNKNOWN };
 
@@ -25,7 +26,9 @@ class Interface {
 	public:
 		void loop();
 		static std::string squareToNotation(int square);
-		static int notationToSquare(std::string &square);
+		static int notationToSquare(const std::string &square);
+		static std::string moveToNotation(Move &move);
+		static Move parseMoveInput(const std::string &input, Color side);
 
 		void printMoves(std::vector<Move>& moves);
 
