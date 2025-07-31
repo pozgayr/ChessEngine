@@ -11,6 +11,7 @@ set(SOURCES
 	src/board.cpp
 	src/interface.cpp
 	src/movegen.cpp
+	src/movetables.cpp
 )
 
 add_executable(chess_engine ${SOURCES})

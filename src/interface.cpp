@@ -1,5 +1,12 @@
 #include "interface.hpp"
 
+std::unordered_map<std::string, std::string> positionPresets = {
+    {"startpos", start_pos},
+    {"pawn", pawn_test},
+    {"knight", knight_test},
+    {"king", king_test}
+};
+
 CommandType getCommand(const std::string& cmd) {
     if (cmd == help_cmd || cmd == help_cmd_short) return CommandType::HELP;
     if (cmd == set_position_cmd) return CommandType::POSITION;
@@ -110,10 +117,10 @@ void Interface::cmdSetPosition(const std::vector<std::string>& args) {
 		std::cout << "Error: position requires at least 2 arguments\n";
 		return;
 	}
-	if (args.at(1) == "startpos") {
-		board.setBoard(start_pos);
-	} else if (args.at(1) == "pawntest") {
-		board.setBoard(pawn_test);	
+
+	auto it = positionPresets.find(args.at(1));
+	if (it != positionPresets.end()) {
+		board.setBoard(it->second);
 	} else if (args.at(1) == "fen") {
 		if (args.size() < 3) {
 			std::cout << "Error: position fen requires at least 3 arguments\n";

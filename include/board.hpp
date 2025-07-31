@@ -18,7 +18,7 @@ enum Pieces {
 	p, n, b, r, q, k
 };
 
-enum Occupancies { white, black, all };
+enum Occupancies { black, white, all };
 enum Color { WHITE = 1, BLACK = 0 };
 
 std::string squareNotation(int square);

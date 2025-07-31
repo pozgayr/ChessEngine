@@ -1,20 +1,57 @@
 #include "movegen.hpp"
+#include "movetables.hpp"
 #include <bit>
 #include <array>
 
 void MoveGenerator::genMoves(const Board &board) {
 	moves.clear();
 
-	if (board.side_to_move == WHITE) {
-		pawnMoves(board, board.bitboards[P], WHITE);		
-	}
-	else {
-		pawnMoves(board, board.bitboards[p], BLACK);		
-	}
-	
+	pawnMoves(board);
+	knightMoves(board);
+	kingMoves(board);
 }
 
-void MoveGenerator::pawnMoves(const Board &board, uint64_t pawns, Color side) {
+void MoveGenerator::kingMoves(const Board &board) {
+	Color side = board.side_to_move;	
+	uint64_t king = (side == WHITE) ? board.bitboards[K] : board.bitboards[k];
+	uint64_t ally_pieces = board.occupancies[side];
+	int king_piece = (side == WHITE) ? K : k;
+
+	while (king) {
+		int from = __builtin_ctzll(king);
+		uint64_t attacks = (LookupTables::kingTable[from]) & ~ally_pieces;
+
+		while (attacks) {
+			int to = __builtin_ctzll(attacks);
+			moves.push_back({from, to, king_piece, 0, 0});
+			attacks &= attacks - 1;
+		}
+		king &= king - 1;
+	}
+}
+
+void MoveGenerator::knightMoves(const Board &board) {
+	Color side = board.side_to_move;
+	uint64_t knights = (side == WHITE) ? board.bitboards[N] : board.bitboards[n];
+	uint64_t ally_pieces = board.occupancies[side];
+	int knight_piece = (side == WHITE) ? N : n;
+	
+	while (knights) {
+		int from = __builtin_ctzll(knights);
+		uint64_t attacks = (LookupTables::knightTable[from]) & ~ally_pieces;
+
+		while (attacks) {
+			int to = __builtin_ctzll(attacks);
+			moves.push_back({from, to, knight_piece, 0, 0});
+			attacks &= attacks - 1;
+		}
+		knights &= knights - 1;
+	}
+}
+
+void MoveGenerator::pawnMoves(const Board &board) {
+	Color side = board.side_to_move;
+	uint64_t pawns = (side == WHITE) ? board.bitboards[P] : board.bitboards[p];
 	uint64_t empty = ~board.occupancies[all];
 	uint64_t opponent = (side == WHITE) ? board.occupancies[black] : board.occupancies[white];
 
