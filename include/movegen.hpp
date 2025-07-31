@@ -19,6 +19,7 @@ class MoveGenerator {
 		void pawnMoves(const Board &board);
 		void knightMoves(const Board &board);
 		void kingMoves(const Board &board);
+		void rookMoves(const Board &board);
 	public:
 		std::vector<Move> moves;
 		void genMoves(const Board &board);

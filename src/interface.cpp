@@ -4,7 +4,8 @@ std::unordered_map<std::string, std::string> positionPresets = {
     {"startpos", start_pos},
     {"pawn", pawn_test},
     {"knight", knight_test},
-    {"king", king_test}
+    {"king", king_test},
+    {"rook", rook_test}
 };
 
 CommandType getCommand(const std::string& cmd) {
@@ -128,7 +129,7 @@ void Interface::cmdSetPosition(const std::vector<std::string>& args) {
 		}
 		board.setBoard(args.at(2)); // TODO: add fen validity checker
 	} else {
-		std::cout << "Error: unknown position argument" << args.at(1) << "\n";	
+		std::cout << "Error: unknown position argument " << args.at(1) << "\n";	
 	}
 }
 

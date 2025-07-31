@@ -9,6 +9,26 @@ void MoveGenerator::genMoves(const Board &board) {
 	pawnMoves(board);
 	knightMoves(board);
 	kingMoves(board);
+	rookMoves(board);
+}
+
+void MoveGenerator::rookMoves(const Board &board) {
+	Color side = board.side_to_move;
+	int rook_piece = (side == WHITE) ? R : r;
+	uint64_t rooks = board.bitboards[rook_piece];
+	uint64_t ally_pieces = board.occupancies[side];
+
+	while (rooks) {
+		int from = __builtin_ctzll(rooks);
+		uint64_t attacks = LookupTables::rookTable[from] & ~ally_pieces;
+
+		while (attacks) {
+			int to = __builtin_ctzll(attacks);
+			moves.push_back({from, to, rook_piece, 0, 0});
+			attacks &= attacks - 1;
+		}
+		rooks &= rooks - 1;
+	}	
 }
 
 void MoveGenerator::kingMoves(const Board &board) {
@@ -19,7 +39,7 @@ void MoveGenerator::kingMoves(const Board &board) {
 
 	while (king) {
 		int from = __builtin_ctzll(king);
-		uint64_t attacks = (LookupTables::kingTable[from]) & ~ally_pieces;
+		uint64_t attacks = LookupTables::kingTable[from] & ~ally_pieces;
 
 		while (attacks) {
 			int to = __builtin_ctzll(attacks);
@@ -38,7 +58,7 @@ void MoveGenerator::knightMoves(const Board &board) {
 	
 	while (knights) {
 		int from = __builtin_ctzll(knights);
-		uint64_t attacks = (LookupTables::knightTable[from]) & ~ally_pieces;
+		uint64_t attacks = LookupTables::knightTable[from] & ~ally_pieces;
 
 		while (attacks) {
 			int to = __builtin_ctzll(attacks);

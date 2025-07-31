@@ -21,6 +21,7 @@ const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQk
 const std::string pawn_test = "rnbqkbnr/ppppp1pp/8/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 2";
 const std::string knight_test = "n7/8/8/5N2/8/4N3/8/8 w - - 0 1";
 const std::string king_test = "8/8/8/8/ppp5/pkp5/ppp5/7k w - - 0 1";
+const std::string rook_test = "8/8/8/4R3/8/8/8/8 w - - 0 1";
 
 extern std::unordered_map<std::string, std::string> positionPresets;
 
