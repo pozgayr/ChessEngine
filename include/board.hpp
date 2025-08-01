@@ -18,6 +18,13 @@ enum Pieces {
 	p, n, b, r, q, k
 };
 
+enum CastlingRights {
+	WHITE_KING_SIDE = 1,
+	WHITE_QUEEN_SIDE = 2,
+	BLACK_KING_SIDE = 4,
+	BLACK_QUEEN_SIDE = 8
+};
+
 enum Occupancies { black, white, all };
 enum Color { WHITE = 1, BLACK = 0 };
 
@@ -33,6 +40,7 @@ class Board {
 		uint64_t bitboards[bitboard_count] = {0};
 		uint64_t occupancies[occupancy_count] = {0};
 		uint64_t enpassant = 0;
+		unsigned int castling_rights = 0;
 		Color side_to_move = WHITE;
 		
 		void printBoard();

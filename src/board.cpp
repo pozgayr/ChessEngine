@@ -78,17 +78,34 @@ void Board::setBoard(const std::string& fen) {
 		}
 		idx++;
 	}
-	idx++;
+	
+	while (fen[idx] == ' ') {
+		idx++;
+	}
 
 	if (idx < fen.length()) {
 		side_to_move = (fen[idx] == 'b') ? BLACK : WHITE;
+		idx++;
 	}
-	idx+=2;
+
+	while (fen[idx] == ' ') {
+		idx++;
+	}
 	
 	while (idx < fen.size() && fen[idx] != ' ') {
+	    switch (fen[idx]) {
+	    	case 'K' : castling_rights |= WHITE_KING_SIDE; break;
+	    	case 'Q' : castling_rights |= WHITE_QUEEN_SIDE; break;
+	    	case 'k' : castling_rights |= BLACK_KING_SIDE; break;
+	    	case 'q' : castling_rights |= BLACK_QUEEN_SIDE; break;
+	    	default: break;
+	    }
 	    idx++;
 	}
-	idx++;
+	
+	while (fen[idx] == ' ') {
+		idx++;
+	}
 
 	if (fen[idx] != '-') {
 		std::string enpassant_square_str = fen.substr(idx, 2);
@@ -96,7 +113,7 @@ void Board::setBoard(const std::string& fen) {
 		enpassant = 1ULL << enpassant_square;
 		idx += 2;
 	}
-	
+
 	updateOccupancies();
 }
 
