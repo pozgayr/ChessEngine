@@ -5,7 +5,9 @@ std::unordered_map<std::string, std::string> positionPresets = {
     {"pawn", pawn_test},
     {"knight", knight_test},
     {"king", king_test},
-    {"rook", rook_test}
+    {"rook", rook_test},
+    {"bishop", bishop_test},
+    {"queen", queen_test}
 };
 
 CommandType getCommand(const std::string& cmd) {

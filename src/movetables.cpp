@@ -2,7 +2,6 @@
 
 uint64_t LookupTables::knightTable[size*size];
 uint64_t LookupTables::kingTable[size*size];
-uint64_t LookupTables::rookTable[size*size];
 
 uint64_t LookupTables::knightAttacksFrom(int square) {
 	uint64_t attacks = 0ULL;
@@ -61,28 +60,7 @@ void LookupTables::computeKingAttacks() {
 	}
 }
 
-uint64_t LookupTables::rookAttacksFrom(int square) {
-	uint64_t attacks = 0ULL;
-
-	int rank = square / size;
-	int file = square % size;
-
-	for (int f = file + 1; f < size; f++) attacks |= (1ULL << (rank * size + f));
-	for (int f = file - 1; f >= 0; f--) attacks |= (1ULL << (rank * size + f));
-	for (int r = rank + 1; r < size; r++) attacks |= (1ULL << (r * 8 + file));
-	for (int r = rank - 1; r >= 0; r--) attacks |= (1ULL << (r * 8 + file));
-
-	return attacks;
-}
-
-void LookupTables::computeRookAttacks() {
-	for (int i = 0; i < size*size; i++) {
-		rookTable[i] = rookAttacksFrom(i);
-	}
-}
-
 void LookupTables::computeAttackTables() {
 	computeKnightAttacks();
 	computeKingAttacks();
-	computeRookAttacks();
 }

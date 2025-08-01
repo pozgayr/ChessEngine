@@ -10,32 +10,83 @@ void MoveGenerator::genMoves(const Board &board) {
 	knightMoves(board);
 	kingMoves(board);
 	rookMoves(board);
+	bishopMoves(board);
+	queenMoves(board);
+}
+
+void MoveGenerator::queenMoves(const Board &board) {
+	Color side = board.side_to_move;
+	int queen_piece = (side == WHITE) ? Q : q;
+	uint64_t queens = board.bitboards[queen_piece];
+	int directions[][2] = {
+		{0, 1}, {1, 0}, {0, -1}, {-1, 0},
+		{1, 1}, {1, -1}, {-1, -1}, {-1, 1}
+	};
+
+	while (queens) {
+		int from = __builtin_ctzll(queens);
+		traverseDirection(from, directions, 8, queen_piece, board);
+		queens &= queens - 1;
+	}
 }
 
 void MoveGenerator::rookMoves(const Board &board) {
 	Color side = board.side_to_move;
 	int rook_piece = (side == WHITE) ? R : r;
 	uint64_t rooks = board.bitboards[rook_piece];
-	uint64_t ally_pieces = board.occupancies[side];
-
+	int directions[][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+	
 	while (rooks) {
 		int from = __builtin_ctzll(rooks);
-		uint64_t attacks = LookupTables::rookTable[from] & ~ally_pieces;
-
-		while (attacks) {
-			int to = __builtin_ctzll(attacks);
-			moves.push_back({from, to, rook_piece, 0, 0});
-			attacks &= attacks - 1;
-		}
+		traverseDirection(from, directions, 4, rook_piece, board);
 		rooks &= rooks - 1;
 	}	
 }
 
+void MoveGenerator::bishopMoves(const Board &board) {
+	Color side = board.side_to_move;
+	int bishop_piece = (side == WHITE) ? B : b;
+	uint64_t bishops = board.bitboards[bishop_piece];
+	int directions[][2] = {{1, 1}, {1, -1}, {-1, -1}, {-1, 1}};
+
+	while (bishops) {
+		int from = __builtin_ctzll(bishops);
+		traverseDirection(from, directions, 4, bishop_piece, board);
+		bishops &= bishops - 1;
+	}
+}
+
+void MoveGenerator::traverseDirection(int from, const int directions[][2], int count, int piece, const Board &board) {
+	Color side = board.side_to_move;
+	uint64_t ally = board.occupancies[side];
+	uint64_t enemy = board.occupancies[!side];
+
+	for (int i = 0; i < count; i++) {
+		int r = from / size;
+		int f = from % size;
+		
+		int dr = directions[i][0];
+		int df = directions[i][1];
+
+		while (true) {
+			r += dr;
+			f += df;
+	
+			if (r < 0 || r >= size || f < 0 || f >= size) break;
+			int square = r * size + f;
+
+			if (ally & (1ULL << square)) break;
+			moves.push_back({from, square, piece, 0, 0});
+			if (enemy & (1ULL << square)) break;
+		}
+	}
+}
+
 void MoveGenerator::kingMoves(const Board &board) {
-	Color side = board.side_to_move;	
-	uint64_t king = (side == WHITE) ? board.bitboards[K] : board.bitboards[k];
+	Color side = board.side_to_move;
+	int king_piece = (side == WHITE) ? K : k;	
+	uint64_t king = board.bitboards[king_piece];
 	uint64_t ally_pieces = board.occupancies[side];
-	int king_piece = (side == WHITE) ? K : k;
 
 	while (king) {
 		int from = __builtin_ctzll(king);
@@ -52,9 +103,10 @@ void MoveGenerator::kingMoves(const Board &board) {
 
 void MoveGenerator::knightMoves(const Board &board) {
 	Color side = board.side_to_move;
-	uint64_t knights = (side == WHITE) ? board.bitboards[N] : board.bitboards[n];
-	uint64_t ally_pieces = board.occupancies[side];
 	int knight_piece = (side == WHITE) ? N : n;
+	uint64_t knights = board.bitboards[knight_piece];
+	uint64_t ally_pieces = board.occupancies[side];
+	
 	
 	while (knights) {
 		int from = __builtin_ctzll(knights);
@@ -71,7 +123,8 @@ void MoveGenerator::knightMoves(const Board &board) {
 
 void MoveGenerator::pawnMoves(const Board &board) {
 	Color side = board.side_to_move;
-	uint64_t pawns = (side == WHITE) ? board.bitboards[P] : board.bitboards[p];
+	int pawn_piece = (side == WHITE) ? P : p;
+	uint64_t pawns = board.bitboards[pawn_piece];
 	uint64_t empty = ~board.occupancies[all];
 	uint64_t opponent = (side == WHITE) ? board.occupancies[black] : board.occupancies[white];
 
@@ -85,7 +138,7 @@ void MoveGenerator::pawnMoves(const Board &board) {
 	 
 	uint64_t promotions = single_push & promotion_rank;
 
-	int pawn_piece = (side == WHITE) ? P : p;
+	
 	std::array<int, 4> promotion_pieces = (side == WHITE)
     	? std::array<int, 4>{Q, R, B, N}
 	    : std::array<int, 4>{q, r, b, n};

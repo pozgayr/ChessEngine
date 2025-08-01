@@ -1,3 +1,4 @@
+
 #ifndef MOVEGEN_HPP
 #define MOVEGEN_HPP
 
@@ -20,6 +21,9 @@ class MoveGenerator {
 		void knightMoves(const Board &board);
 		void kingMoves(const Board &board);
 		void rookMoves(const Board &board);
+		void bishopMoves(const Board &board);
+		void queenMoves(const Board &board);
+		void traverseDirection(int from, const int directions[][2], int count, int piece, const Board &boards);
 	public:
 		std::vector<Move> moves;
 		void genMoves(const Board &board);
