@@ -129,7 +129,12 @@ void Board::makeMove(const Move& move) {
 			}
 		}
 
-		bitboards[move.piece] |= (1ULL << move.to); //place piece
+		if (!move.promotion) {
+			bitboards[move.piece] |= (1ULL << move.to); //place piece
+		} else {
+			bitboards[move.promotion] |= (1ULL << move.to);
+		}
+		
 
 	    if (move.piece == P && (move.to - move.from) == size * 2) { //hadle enpassant bitboard update
 	    	enpassant = (1ULL << (move.from + size)); 
