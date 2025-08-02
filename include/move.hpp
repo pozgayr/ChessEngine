@@ -5,8 +5,9 @@ struct Move {
 	int from;
 	int to;
 	int piece;
-	int promotion;
-	bool enpassant;
+	int promotion = 0;
+	bool enpassant = false;
+	unsigned int castling = 0;
 
  	bool operator==(const Move &other) const {
 	    return from == other.from &&

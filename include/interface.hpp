@@ -12,18 +12,20 @@ const std::string quit_cmd = "quit";
 const std::string quit_cmd_short = "q";
 const std::string help_cmd = "help";
 const std::string help_cmd_short = "h";
-const std::string set_position_cmd = "position";
+const std::string pos_cmd = "position";
+const std::string pos_cmd_short = "pos";
 const std::string print_cmd = "print";
 const std::string move_cmd = "move";
 const std::string allmoves_cmd = "allmoves";
 const std::string setside_cmd = "side";
 const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const std::string pawn_test = "rnbqkbnr/ppppp1pp/8/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 2";
-const std::string knight_test = "n7/8/8/5N2/8/4N3/8/8 w - - 0 1";
-const std::string king_test = "8/8/8/8/ppp5/pkp5/ppp5/7k w - - 0 1";
-const std::string rook_test = "8/8/8/2rR2r1/3B4/8/8/8 w - - 0 1";
-const std::string bishop_test = "1r6/8/5r2/4B3/3Q1Q2/8/8/8 w - - 0 1";
-const std::string queen_test = "4p2Q/6Q1/8/8/7p/8/8/8 b - - 0 1";
+const std::string pawn_test = "8/3P4/8/8/8/8/8/8 w - - 0 1";
+const std::string knight_test = "n7/8/8/5N2/8/4N3/8/8 w q - 0 1";
+const std::string king_test = "8/8/8/8/ppp5/pkp5/ppp5/7k w Kk - 0 1";
+const std::string rook_test = "8/8/8/2rR2r1/3B4/8/8/8 w Qq - 0 1";
+const std::string bishop_test = "1r6/8/5r2/4B3/3Q1Q2/8/8/8 w Kkq - 0 1";
+const std::string queen_test = "4p2Q/6Q1/8/8/7p/8/8/8 b KQq - 0 1";
+const std::string castling_test = "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1";
 
 extern std::unordered_map<std::string, std::string> positionPresets;
 

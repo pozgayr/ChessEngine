@@ -14,6 +14,10 @@ void MoveGenerator::genMoves(const Board &board) {
 	queenMoves(board);
 }
 
+void MoveGenerator::castlingMoves(const Board &board) {
+	
+}
+
 void MoveGenerator::queenMoves(const Board &board) {
 	Color side = board.side_to_move;
 	int queen_piece = (side == WHITE) ? Q : q;
@@ -76,7 +80,7 @@ void MoveGenerator::traverseDirection(int from, const int directions[][2], int c
 			int square = r * size + f;
 
 			if (ally & (1ULL << square)) break;
-			moves.push_back({from, square, piece, 0, 0});
+			moves.push_back({from, square, piece});
 			if (enemy & (1ULL << square)) break;
 		}
 	}
@@ -94,7 +98,7 @@ void MoveGenerator::kingMoves(const Board &board) {
 
 		while (attacks) {
 			int to = __builtin_ctzll(attacks);
-			moves.push_back({from, to, king_piece, 0, 0});
+			moves.push_back({from, to, king_piece});
 			attacks &= attacks - 1;
 		}
 		king &= king - 1;
@@ -114,7 +118,7 @@ void MoveGenerator::knightMoves(const Board &board) {
 
 		while (attacks) {
 			int to = __builtin_ctzll(attacks);
-			moves.push_back({from, to, knight_piece, 0, 0});
+			moves.push_back({from, to, knight_piece});
 			attacks &= attacks - 1;
 		}
 		knights &= knights - 1;
@@ -147,7 +151,9 @@ void MoveGenerator::pawnMoves(const Board &board) {
 		int to = __builtin_ctzll(promotions);
 		int from = to - forward_shift;
 		for (int promo_piece : promotion_pieces) {
-        	moves.push_back({from, to, pawn_piece, promo_piece, 0});
+			Move m{from, to, pawn_piece};
+			m.promotion = promo_piece;
+        	moves.push_back(m);
         }
         promotions &= promotions - 1;
 	}
@@ -157,7 +163,7 @@ void MoveGenerator::pawnMoves(const Board &board) {
 	while (normal_push) {
 		int to = __builtin_ctzll(normal_push);
 		int from = to - forward_shift;
-		moves.push_back({from, to, pawn_piece, 0, 0});
+		moves.push_back({from, to, pawn_piece});
 		normal_push &= normal_push - 1;
 	}
 
@@ -168,7 +174,7 @@ void MoveGenerator::pawnMoves(const Board &board) {
 	while (double_push) {
 		int to = __builtin_ctzll(double_push);
 		int from = to - double_shift;
-		moves.push_back({from, to, pawn_piece, 0, 0});
+		moves.push_back({from, to, pawn_piece});
 		double_push &= double_push - 1;
 	}
 
@@ -178,7 +184,7 @@ void MoveGenerator::pawnMoves(const Board &board) {
 	while (left_capture) {
 		int to = __builtin_ctzll(left_capture);
 		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
-		moves.push_back({from, to, pawn_piece, 0, 0});
+		moves.push_back({from, to, pawn_piece});
 		left_capture &= left_capture - 1;
 	}
 
@@ -188,7 +194,7 @@ void MoveGenerator::pawnMoves(const Board &board) {
 	while (right_capture) {
 		int to = __builtin_ctzll(right_capture);
 		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
-		moves.push_back({from, to, pawn_piece, 0, 0});
+		moves.push_back({from, to, pawn_piece});
 		right_capture &= right_capture - 1;
 	}
 
@@ -198,7 +204,9 @@ void MoveGenerator::pawnMoves(const Board &board) {
 	if (enpassant_left) {
 		int to = __builtin_ctzll(enpassant_left);
 		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
-		moves.push_back({from, to, pawn_piece, 0, 1});
+		Move m{from, to, pawn_piece};
+		m.enpassant = true;
+		moves.push_back(m);
 	}
 
 	uint64_t enpassant_right = (side == WHITE) ? ((pawns << (size + 1)) & ~fileH & board.enpassant)
@@ -207,6 +215,8 @@ void MoveGenerator::pawnMoves(const Board &board) {
 	if (enpassant_right) {
 		int to = __builtin_ctzll(enpassant_right);
 		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
-		moves.push_back({from, to, pawn_piece, 0, 1});
+		Move m{from, to, pawn_piece};
+		m.enpassant = true;
+		moves.push_back(m);
 	}
 }

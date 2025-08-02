@@ -1,5 +1,6 @@
 #include "board.hpp"
 #include "interface.hpp"
+#include "movetables.hpp"
 
 void Board::setBit(uint64_t &bb, int square) {
 	bb |= (1ULL << square); //1ULL -  1 unsigned long long (64b)
@@ -44,8 +45,7 @@ void Board::updateOccupancies() {
 void Board::setBoard(const std::string& fen) {
 	for (int i = 0; i < bitboard_count; i++) bitboards[i] = 0;
 	for (int i = 0; i < occupancy_count; i++) occupancies[i] = 0;
-
-
+	castling_rights = 0U;
 	enpassant = 0ULL;
 	side_to_move = WHITE;
 	
@@ -94,10 +94,10 @@ void Board::setBoard(const std::string& fen) {
 	
 	while (idx < fen.size() && fen[idx] != ' ') {
 	    switch (fen[idx]) {
-	    	case 'K' : castling_rights |= WHITE_KING_SIDE; break;
-	    	case 'Q' : castling_rights |= WHITE_QUEEN_SIDE; break;
-	    	case 'k' : castling_rights |= BLACK_KING_SIDE; break;
-	    	case 'q' : castling_rights |= BLACK_QUEEN_SIDE; break;
+	    	case 'K' : castling_rights |= WK; break;
+	    	case 'Q' : castling_rights |= WQ; break;
+	    	case 'k' : castling_rights |= BK; break;
+	    	case 'q' : castling_rights |= BQ; break;
 	    	default: break;
 	    }
 	    idx++;
@@ -144,7 +144,9 @@ void Board::makeMove(const Move& move) {
 	    		bitboards[P] &= ~((1ULL << move.to) << size);
 	    	}
 	    }
-	
+
+		castling_rights &= LookupTables::castlingRightsTable[move.from][move.to];
+		std::cout << castling_rights << "\n";
 		side_to_move = (side_to_move == WHITE) ? BLACK : WHITE;
 		updateOccupancies();
 	}

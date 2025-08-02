@@ -23,6 +23,7 @@ class MoveGenerator {
 		void rookMoves(const Board &board);
 		void bishopMoves(const Board &board);
 		void queenMoves(const Board &board);
+		void castlingMoves(const Board &board);
 		void traverseDirection(int from, const int directions[][2], int count, int piece, const Board &boards);
 	public:
 		std::vector<Move> moves;

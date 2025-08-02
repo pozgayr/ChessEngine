@@ -2,17 +2,18 @@
 
 std::unordered_map<std::string, std::string> positionPresets = {
     {"startpos", start_pos},
-    {"pawn", pawn_test},
-    {"knight", knight_test},
-    {"king", king_test},
-    {"rook", rook_test},
-    {"bishop", bishop_test},
-    {"queen", queen_test}
+    {"p", pawn_test},
+    {"n", knight_test},
+    {"k", king_test},
+    {"r", rook_test},
+    {"b", bishop_test},
+    {"q", queen_test},
+    {"c", castling_test}
 };
 
 CommandType getCommand(const std::string& cmd) {
     if (cmd == help_cmd || cmd == help_cmd_short) return CommandType::HELP;
-    if (cmd == set_position_cmd) return CommandType::POSITION;
+    if (cmd == pos_cmd || cmd == pos_cmd_short) return CommandType::POSITION;
     if (cmd == print_cmd) return CommandType::PRINT;
     if (cmd == quit_cmd || cmd == quit_cmd_short) return CommandType::QUIT;
     if (cmd == move_cmd) return CommandType::MOVE;

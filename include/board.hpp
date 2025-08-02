@@ -18,11 +18,11 @@ enum Pieces {
 	p, n, b, r, q, k
 };
 
-enum CastlingRights {
-	WHITE_KING_SIDE = 1,
-	WHITE_QUEEN_SIDE = 2,
-	BLACK_KING_SIDE = 4,
-	BLACK_QUEEN_SIDE = 8
+enum CastlingRights : unsigned int {
+	WK = 1 << 0,
+	WQ = 1 << 1,
+	BK = 1 << 2,
+	BQ = 1 << 3
 };
 
 enum Occupancies { black, white, all };
