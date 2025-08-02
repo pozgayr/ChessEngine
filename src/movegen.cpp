@@ -12,6 +12,7 @@ void MoveGenerator::genMoves(const Board &board) {
 	rookMoves(board);
 	bishopMoves(board);
 	queenMoves(board);
+	pawnAttackMoves(board);
 }
 
 void MoveGenerator::castlingMoves(const Board &board) {
@@ -125,13 +126,61 @@ void MoveGenerator::knightMoves(const Board &board) {
 	}
 }
 
+void MoveGenerator::pawnAttackMoves(const Board &board) {
+	Color side = board.side_to_move;
+	int pawn_piece = (side == WHITE) ? P : p;
+	uint64_t pawns = board.bitboards[pawn_piece];
+	uint64_t opponent = board.occupancies[!side];
+
+	uint64_t left_capture = (side == WHITE) ? ((pawns << (size - 1)) & ~fileA & opponent)
+												: ((pawns >> (size - 1)) & ~fileH & opponent);
+	
+	while (left_capture) {
+		int to = __builtin_ctzll(left_capture);
+		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
+		moves.push_back({from, to, pawn_piece});
+		left_capture &= left_capture - 1;
+	}
+
+	uint64_t right_capture = (side == WHITE) ? ((pawns << (size + 1)) & ~fileH & opponent)
+											 : ((pawns >> (size + 1)) & ~fileA & opponent);
+
+	while (right_capture) {
+		int to = __builtin_ctzll(right_capture);
+		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
+		moves.push_back({from, to, pawn_piece});
+		right_capture &= right_capture - 1;
+	}
+
+	uint64_t enpassant_left = (side == WHITE) ? ((pawns << (size - 1)) & ~fileA & board.enpassant)
+											  : ((pawns >> (size - 1)) & ~fileH & board.enpassant);
+											  
+	if (enpassant_left) {
+		int to = __builtin_ctzll(enpassant_left);
+		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
+		Move m{from, to, pawn_piece};
+		m.enpassant = true;
+		moves.push_back(m);
+	}
+
+	uint64_t enpassant_right = (side == WHITE) ? ((pawns << (size + 1)) & ~fileH & board.enpassant)
+											   : ((pawns >> (size + 1)) & ~fileA & board.enpassant);
+
+	if (enpassant_right) {
+		int to = __builtin_ctzll(enpassant_right);
+		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
+		Move m{from, to, pawn_piece};
+		m.enpassant = true;
+		moves.push_back(m);
+	}
+}
+
 void MoveGenerator::pawnMoves(const Board &board) {
 	Color side = board.side_to_move;
 	int pawn_piece = (side == WHITE) ? P : p;
 	uint64_t pawns = board.bitboards[pawn_piece];
 	uint64_t empty = ~board.occupancies[all];
-	uint64_t opponent = (side == WHITE) ? board.occupancies[black] : board.occupancies[white];
-
+	
 	int forward_shift = (side == WHITE) ? size : -size;
 	int double_shift  = (side == WHITE) ? size*2 : -size*2;
 
@@ -176,47 +225,5 @@ void MoveGenerator::pawnMoves(const Board &board) {
 		int from = to - double_shift;
 		moves.push_back({from, to, pawn_piece});
 		double_push &= double_push - 1;
-	}
-
-	uint64_t left_capture = (side == WHITE) ? ((pawns << (size - 1)) & ~fileA & opponent)
-											: ((pawns >> (size - 1)) & ~fileH & opponent);
-
-	while (left_capture) {
-		int to = __builtin_ctzll(left_capture);
-		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
-		moves.push_back({from, to, pawn_piece});
-		left_capture &= left_capture - 1;
-	}
-
-	uint64_t right_capture = (side == WHITE) ? ((pawns << (size + 1)) & ~fileH & opponent)
-											 : ((pawns >> (size + 1)) & ~fileA & opponent);
-
-	while (right_capture) {
-		int to = __builtin_ctzll(right_capture);
-		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
-		moves.push_back({from, to, pawn_piece});
-		right_capture &= right_capture - 1;
-	}
-
-	uint64_t enpassant_left = (side == WHITE) ? ((pawns << (size - 1)) & ~fileA & board.enpassant)
-											  : ((pawns >> (size - 1)) & ~fileH & board.enpassant);
-											  
-	if (enpassant_left) {
-		int to = __builtin_ctzll(enpassant_left);
-		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
-		Move m{from, to, pawn_piece};
-		m.enpassant = true;
-		moves.push_back(m);
-	}
-
-	uint64_t enpassant_right = (side == WHITE) ? ((pawns << (size + 1)) & ~fileH & board.enpassant)
-											   : ((pawns >> (size + 1)) & ~fileA & board.enpassant);
-
-	if (enpassant_right) {
-		int to = __builtin_ctzll(enpassant_right);
-		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
-		Move m{from, to, pawn_piece};
-		m.enpassant = true;
-		moves.push_back(m);
 	}
 }

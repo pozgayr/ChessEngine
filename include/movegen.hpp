@@ -18,6 +18,7 @@ constexpr uint64_t fileH = 0x8080808080808080ULL;
 class MoveGenerator {
 	private:
 		void pawnMoves(const Board &board);
+		void pawnAttackMoves(const Board &board);
 		void knightMoves(const Board &board);
 		void kingMoves(const Board &board);
 		void rookMoves(const Board &board);
