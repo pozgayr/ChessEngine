@@ -6,9 +6,15 @@
 
 int main() {
 
-	LookupTables::computeAttackTables();
-	Interface interface;
-	interface.loop();
 
+	
+	LookupTables::computeAttackTables();
+
+	Board board;
+	MoveGenerator movegen;
+	
+	board.setBoard("8/8/8/8/8/8/r7/8 w - - 0 1");
+	std::cout << movegen.squareAttacked(board, BLACK, 9) << "\n";
+	
 	return 0;
 }

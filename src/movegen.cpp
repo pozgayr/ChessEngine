@@ -5,64 +5,81 @@
 
 void MoveGenerator::genMoves(const Board &board) {
 	moves.clear();
+	Color side = board.side_to_move;
+	attack_mask = 0ULL;
 
-	pawnMoves(board);
-	knightMoves(board);
-	kingMoves(board);
-	rookMoves(board);
-	bishopMoves(board);
-	queenMoves(board);
-	pawnAttackMoves(board);
+	MoveGenContext ctx{board, &moves, attack_mask, side};
+	
+	pawnMoves(board, moves);
+	knightMoves(ctx);
+	kingMoves(ctx);
+	rookMoves(ctx);
+	bishopMoves(ctx);
+	queenMoves(ctx);
+	pawnAttackMoves(ctx);
 }
 
-void MoveGenerator::castlingMoves(const Board &board) {
+bool MoveGenerator::squareAttacked(const Board &board, Color side, int square) {
+	uint64_t attacks = 0ULL;
+	MoveGenContext ctx = {board, nullptr, attacks, side};
+
+	knightMoves(ctx);
+	kingMoves(ctx);
+	rookMoves(ctx);
+	bishopMoves(ctx);
+	queenMoves(ctx);
+	pawnAttackMoves(ctx);
+	
+	return (1ULL << square) & attacks;
+}
+
+void MoveGenerator::castlingMoves(MoveGenContext &ctx) {
 	
 }
 
-void MoveGenerator::queenMoves(const Board &board) {
-	Color side = board.side_to_move;
+void MoveGenerator::queenMoves(MoveGenContext &ctx) {
+	Color side = ctx.side;
+	Board board = ctx.board;
 	int queen_piece = (side == WHITE) ? Q : q;
 	uint64_t queens = board.bitboards[queen_piece];
-	int directions[][2] = {
-		{0, 1}, {1, 0}, {0, -1}, {-1, 0},
-		{1, 1}, {1, -1}, {-1, -1}, {-1, 1}
-	};
 
 	while (queens) {
 		int from = __builtin_ctzll(queens);
-		traverseDirection(from, directions, 8, queen_piece, board);
+		traverseDirection(from, queenDirections, 8, queen_piece, ctx);
 		queens &= queens - 1;
 	}
 }
 
-void MoveGenerator::rookMoves(const Board &board) {
-	Color side = board.side_to_move;
+void MoveGenerator::rookMoves(MoveGenContext &ctx)  {
+	Color side = ctx.side;
+	Board board = ctx.board;
 	int rook_piece = (side == WHITE) ? R : r;
 	uint64_t rooks = board.bitboards[rook_piece];
-	int directions[][2] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
 	
 	while (rooks) {
 		int from = __builtin_ctzll(rooks);
-		traverseDirection(from, directions, 4, rook_piece, board);
+		traverseDirection(from, rookDirections, 4, rook_piece, ctx);
 		rooks &= rooks - 1;
 	}	
 }
 
-void MoveGenerator::bishopMoves(const Board &board) {
-	Color side = board.side_to_move;
+void MoveGenerator::bishopMoves(MoveGenContext &ctx) {
+	Color side = ctx.side;
+	Board board = ctx.board;
 	int bishop_piece = (side == WHITE) ? B : b;
 	uint64_t bishops = board.bitboards[bishop_piece];
-	int directions[][2] = {{1, 1}, {1, -1}, {-1, -1}, {-1, 1}};
 
 	while (bishops) {
 		int from = __builtin_ctzll(bishops);
-		traverseDirection(from, directions, 4, bishop_piece, board);
+		traverseDirection(from, bishopDirections, 4, bishop_piece, ctx);
 		bishops &= bishops - 1;
 	}
 }
 
-void MoveGenerator::traverseDirection(int from, const int directions[][2], int count, int piece, const Board &board) {
-	Color side = board.side_to_move;
+void MoveGenerator::traverseDirection(int from, const int directions[][2], 
+									  int count, int piece, MoveGenContext &ctx) {
+	Color side = ctx.side;
+	Board board = ctx.board;
 	uint64_t ally = board.occupancies[side];
 	uint64_t enemy = board.occupancies[!side];
 
@@ -80,15 +97,17 @@ void MoveGenerator::traverseDirection(int from, const int directions[][2], int c
 			if (r < 0 || r >= size || f < 0 || f >= size) break;
 			int square = r * size + f;
 
+			ctx.attack_mask |= (1ULL << square);
 			if (ally & (1ULL << square)) break;
-			moves.push_back({from, square, piece});
+			if (ctx.out_moves) ctx.out_moves->push_back({from, square, piece});
 			if (enemy & (1ULL << square)) break;
 		}
 	}
 }
 
-void MoveGenerator::kingMoves(const Board &board) {
-	Color side = board.side_to_move;
+void  MoveGenerator::kingMoves(MoveGenContext &ctx) {
+	Color side = ctx.side;
+	Board board = ctx.board;
 	int king_piece = (side == WHITE) ? K : k;	
 	uint64_t king = board.bitboards[king_piece];
 	uint64_t ally_pieces = board.occupancies[side];
@@ -99,15 +118,17 @@ void MoveGenerator::kingMoves(const Board &board) {
 
 		while (attacks) {
 			int to = __builtin_ctzll(attacks);
-			moves.push_back({from, to, king_piece});
+			if (ctx.out_moves) ctx.out_moves->push_back({from, to, king_piece});
+			ctx.attack_mask |= (1ULL << to);
 			attacks &= attacks - 1;
 		}
 		king &= king - 1;
 	}
 }
 
-void MoveGenerator::knightMoves(const Board &board) {
-	Color side = board.side_to_move;
+void MoveGenerator::knightMoves(MoveGenContext &ctx) {
+	Color side = ctx.side;
+	Board board = ctx.board;
 	int knight_piece = (side == WHITE) ? N : n;
 	uint64_t knights = board.bitboards[knight_piece];
 	uint64_t ally_pieces = board.occupancies[side];
@@ -119,15 +140,17 @@ void MoveGenerator::knightMoves(const Board &board) {
 
 		while (attacks) {
 			int to = __builtin_ctzll(attacks);
-			moves.push_back({from, to, knight_piece});
+			if (ctx.out_moves) ctx.out_moves->push_back({from, to, knight_piece});
+			ctx.attack_mask |= (1ULL << to);
 			attacks &= attacks - 1;
 		}
 		knights &= knights - 1;
 	}
 }
 
-void MoveGenerator::pawnAttackMoves(const Board &board) {
-	Color side = board.side_to_move;
+void MoveGenerator::pawnAttackMoves(MoveGenContext &ctx) {
+	Color side = ctx.side;
+	Board board = ctx.board;
 	int pawn_piece = (side == WHITE) ? P : p;
 	uint64_t pawns = board.bitboards[pawn_piece];
 	uint64_t opponent = board.occupancies[!side];
@@ -138,7 +161,8 @@ void MoveGenerator::pawnAttackMoves(const Board &board) {
 	while (left_capture) {
 		int to = __builtin_ctzll(left_capture);
 		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
-		moves.push_back({from, to, pawn_piece});
+		if (ctx.out_moves) ctx.out_moves->push_back({from, to, pawn_piece});
+		ctx.attack_mask |= (1ULL << to);
 		left_capture &= left_capture - 1;
 	}
 
@@ -148,7 +172,8 @@ void MoveGenerator::pawnAttackMoves(const Board &board) {
 	while (right_capture) {
 		int to = __builtin_ctzll(right_capture);
 		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
-		moves.push_back({from, to, pawn_piece});
+		if (ctx.out_moves) ctx.out_moves->push_back({from, to, pawn_piece});
+		ctx.attack_mask |= (1ULL << to);
 		right_capture &= right_capture - 1;
 	}
 
@@ -158,9 +183,12 @@ void MoveGenerator::pawnAttackMoves(const Board &board) {
 	if (enpassant_left) {
 		int to = __builtin_ctzll(enpassant_left);
 		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
-		Move m{from, to, pawn_piece};
-		m.enpassant = true;
-		moves.push_back(m);
+		if (ctx.out_moves) {
+			Move m{from, to, pawn_piece};
+			m.enpassant = true;
+			ctx.out_moves->push_back(m);	
+		}
+		ctx.attack_mask |= (1ULL << to);
 	}
 
 	uint64_t enpassant_right = (side == WHITE) ? ((pawns << (size + 1)) & ~fileH & board.enpassant)
@@ -169,13 +197,16 @@ void MoveGenerator::pawnAttackMoves(const Board &board) {
 	if (enpassant_right) {
 		int to = __builtin_ctzll(enpassant_right);
 		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
-		Move m{from, to, pawn_piece};
-		m.enpassant = true;
-		moves.push_back(m);
+		if (ctx.out_moves) {
+			Move m{from, to, pawn_piece};
+			m.enpassant = true;
+			ctx.out_moves->push_back(m);	
+		}
+		ctx.attack_mask |= (1ULL << to);
 	}
 }
 
-void MoveGenerator::pawnMoves(const Board &board) {
+void MoveGenerator::pawnMoves(const Board &board, moveList &out_moves) {
 	Color side = board.side_to_move;
 	int pawn_piece = (side == WHITE) ? P : p;
 	uint64_t pawns = board.bitboards[pawn_piece];
@@ -202,7 +233,7 @@ void MoveGenerator::pawnMoves(const Board &board) {
 		for (int promo_piece : promotion_pieces) {
 			Move m{from, to, pawn_piece};
 			m.promotion = promo_piece;
-        	moves.push_back(m);
+        	out_moves.push_back(m);
         }
         promotions &= promotions - 1;
 	}
@@ -212,7 +243,7 @@ void MoveGenerator::pawnMoves(const Board &board) {
 	while (normal_push) {
 		int to = __builtin_ctzll(normal_push);
 		int from = to - forward_shift;
-		moves.push_back({from, to, pawn_piece});
+		out_moves.push_back({from, to, pawn_piece});
 		normal_push &= normal_push - 1;
 	}
 
@@ -223,7 +254,7 @@ void MoveGenerator::pawnMoves(const Board &board) {
 	while (double_push) {
 		int to = __builtin_ctzll(double_push);
 		int from = to - double_shift;
-		moves.push_back({from, to, pawn_piece});
+		out_moves.push_back({from, to, pawn_piece});
 		double_push &= double_push - 1;
 	}
 }
