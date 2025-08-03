@@ -3,6 +3,8 @@
 std::unordered_map<std::string, std::string> positionPresets = {
     {"startpos", start_pos},
     {"p", pawn_test},
+    {"pp", pawn_promo_test},        
+    {"ep", enpassant_test},         
     {"n", knight_test},
     {"k", king_test},
     {"r", rook_test},
@@ -19,6 +21,7 @@ CommandType getCommand(const std::string& cmd) {
     if (cmd == move_cmd) return CommandType::MOVE;
     if (cmd == allmoves_cmd) return CommandType::ALLMOVES;
     if (cmd == setside_cmd) return CommandType::SIDE;
+    if (cmd == undo_cmd) return CommandType::UNDO;
     return CommandType::UNKNOWN;
 }
 
@@ -67,6 +70,9 @@ void Interface::executeCommand(const std::vector<std::string>& args, bool& quit)
 		case CommandType::SIDE:
 			cmdSwitchSide(args);
 			break;
+		case CommandType::UNDO:
+			cmdUndo();
+			break;
 		case CommandType::UNKNOWN:
 		default:
 			std::cout << "Unknown command: " << args.at(0) << "\n";
@@ -98,6 +104,15 @@ std::vector<std::string> Interface::split(const std::string& line, char delimite
 		tokens.push_back(token);
 	}
 	return tokens;
+}
+
+void Interface::cmdUndo() {
+
+	if (board.undo_stack.empty()) {
+		std::cout << "Error: no moves were made yet\n";
+		return;
+	}
+	board.unmakeMove();
 }
 
 void Interface::cmdSwitchSide(const std::vector<std::string>& args) {

@@ -118,63 +118,115 @@ void Board::setBoard(const std::string& fen) {
 }
 
 void Board::makeMove(const Move& move) {
+	if (!(bitboards[move.piece] & (1ULL << move.from))) return;
 
-	if (bitboards[move.piece] & (1ULL << move.from)) {
-		bitboards[move.piece] &= ~(1ULL << move.from); //remove from original position
+	Undo u;
+	u.captured_piece = NONE;
+	u.prev_castling_rights = castling_rights;
+	u.prev_enpassant = enpassant;
+	bitboards[move.piece] &= ~(1ULL << move.from); //remove from original position
 
-		for (int i = 0; i < bitboard_count; i++) {
-			if (bitboards[i] & (1ULL << move.to)) {
-				bitboards[i] &= ~(1ULL << move.to); //remove piece if present at the target location
-				break;
-			}
+	for (int i = 0; i < bitboard_count; i++) {
+		if (bitboards[i] & (1ULL << move.to)) {
+			u.captured_piece = i;
+			bitboards[i] &= ~(1ULL << move.to); //remove piece if present at the target location
+			break;
 		}
-
-		if (!move.promotion) {
-			bitboards[move.piece] |= (1ULL << move.to); //place piece
-		} else {
-			bitboards[move.promotion] |= (1ULL << move.to);
-		}
-		
-
-	    if (move.piece == P && (move.to - move.from) == size * 2) { //hadle enpassant bitboard update
-	    	enpassant = (1ULL << (move.from + size)); 
-	    } else if (move.piece == p && (move.from - move.to) == size * 2) {
-	    	enpassant = (1ULL << (move.from - size));
-	    }
-
-	    if (move.enpassant) {
-	    	if (side_to_move == WHITE) {
-	    		bitboards[p] &= ~((1ULL << move.to) >> size);
-	    	} else {
-	    		bitboards[P] &= ~((1ULL << move.to) << size);
-	    	}
-	    }
-
-	    if (move.castling) { //move rook
-	    	 switch (move.castling) {
-		        case WK: 
-		            bitboards[R] &= ~(1ULL << h1);
-		            bitboards[R] |=  (1ULL << f1);
-		            break;
-		        case WQ: 
-		            bitboards[R] &= ~(1ULL << a1);
-		            bitboards[R] |=  (1ULL << d1);
-		            break;
-		        case BK: 
-		            bitboards[r] &= ~(1ULL << h8);
-		            bitboards[r] |=  (1ULL << f8);
-		            break;
-		        case BQ: 
-		            bitboards[r] &= ~(1ULL << a8);
-		            bitboards[r] |=  (1ULL << d8);
-		            break;
-    		}
-	    }
-
-		castling_rights &= LookupTables::castlingRightsTable[move.from][move.to];
-		std::cout << castling_rights << "\n";
-		side_to_move = (side_to_move == WHITE) ? BLACK : WHITE;
-		updateOccupancies();
 	}
+
+	if (!move.promotion) {
+		bitboards[move.piece] |= (1ULL << move.to); //place piece
+	} else {
+		bitboards[move.promotion] |= (1ULL << move.to);
+	}
+
+    if (move.piece == P && (move.to - move.from) == size * 2) { //hadle enpassant bitboard update
+    	enpassant = (1ULL << (move.from + size)); 
+    } else if (move.piece == p && (move.from - move.to) == size * 2) {
+    	enpassant = (1ULL << (move.from - size));
+    }
+
+    if (move.enpassant) {
+    	if (side_to_move == WHITE) {
+    		bitboards[p] &= ~((1ULL << move.to) >> size);
+    		u.captured_piece = P;
+    	} else {
+    		bitboards[P] &= ~((1ULL << move.to) << size);
+    		u.captured_piece = p;
+    	}
+    }
+
+    if (move.castling) { //move rook
+    	 switch (move.castling) {
+	        case WK: 
+	            bitboards[R] &= ~(1ULL << h1);
+	            bitboards[R] |=  (1ULL << f1);
+	            break;
+	        case WQ: 
+	            bitboards[R] &= ~(1ULL << a1);
+	            bitboards[R] |=  (1ULL << d1);
+	            break;
+	        case BK: 
+	            bitboards[r] &= ~(1ULL << h8);
+	            bitboards[r] |=  (1ULL << f8);
+	            break;
+	        case BQ: 
+	            bitboards[r] &= ~(1ULL << a8);
+	            bitboards[r] |=  (1ULL << d8);
+	            break;
+   		}
+    }
+	undo_stack.push_back(u);
+	move_stack.push_back(move);
 	
+	castling_rights &= LookupTables::castlingRightsTable[move.from][move.to];
+	side_to_move = static_cast<Color>(!side_to_move);
+	updateOccupancies();	
+}
+
+void Board::unmakeMove() {
+	Undo u = undo_stack.back();
+	undo_stack.pop_back();
+	Move move = move_stack.back();
+	move_stack.pop_back();
+
+	Color attacker_side = side_to_move;
+	side_to_move = static_cast<Color>(!side_to_move);
+
+	enpassant = u.prev_enpassant;
+	castling_rights = u.prev_castling_rights;
+
+	int moved_piece = (move.promotion) ? move.promotion : move.piece;
+	bitboards[moved_piece] &= ~(1ULL << move.to);
+
+	bitboards[move.piece] |= (1ULL << move.from);
+
+	 if (u.captured_piece != NONE) {
+        if (move.enpassant) {
+            int captured_square = (attacker_side == WHITE) ? move.to - size : move.to + size;
+            bitboards[u.captured_piece] |= (1ULL << captured_square);
+        } else {
+            bitboards[u.captured_piece] |= (1ULL << move.to);
+        }
+    }
+
+    if (move.castling) {
+        if (move.to == g1) { 
+            bitboards[R] &= ~(1ULL << f1);
+            bitboards[R] |= (1ULL << h1);
+        }
+        else if (move.to == c1) {
+            bitboards[R] &= ~(1ULL << d1);
+            bitboards[R] |= (1ULL << a1);
+        }
+        else if (move.to == g8) {
+            bitboards[r] &= ~(1ULL << f8);
+            bitboards[r] |= (1ULL << h8);
+        }
+        else if (move.to == c8) { 
+            bitboards[r] &= ~(1ULL << d8);
+            bitboards[r] |= (1ULL << a8);
+        }
+    }
+    updateOccupancies();
 }

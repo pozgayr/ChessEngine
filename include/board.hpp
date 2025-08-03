@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include <vector>
 #include "move.hpp"
 
 constexpr int bitboard_count = 12;
@@ -11,17 +12,10 @@ constexpr int occupancy_count = 3;
 constexpr int size = 8;
 constexpr int board_size = 64;
 
-
 enum Pieces {
+	NONE = -1,
 	P, N, B, R, Q, K,
-	p, n, b, r, q, k,
-	NO_PIECE
-};
-
-struct Undo {
-	int captured_piece;
-	unsigned int prev_castling_rights;
-	int prev_en_passant;
+	p, n, b, r, q, k
 };
 
 enum CastlingRights : unsigned int {
@@ -42,6 +36,12 @@ enum Square {
     a8, b8, c8, d8, e8, f8, g8, h8
 };
 
+struct Undo {
+	int captured_piece;
+	unsigned int prev_castling_rights;
+	int prev_enpassant;
+};
+
 enum Occupancies { black, white, all };
 enum Color { WHITE = 1, BLACK = 0 };
 
@@ -59,10 +59,14 @@ class Board {
 		uint64_t enpassant = 0;
 		unsigned int castling_rights = 0;
 		Color side_to_move = WHITE;
+
+		std::vector<Move> move_stack;
+		std::vector<Undo> undo_stack;
 		
 		void printBoard();
 		void setBoard(const std::string& fen);
 		void makeMove(const Move& move);
+		void unmakeMove();
 };
 
 #endif

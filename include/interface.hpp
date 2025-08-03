@@ -18,19 +18,22 @@ const std::string print_cmd = "print";
 const std::string move_cmd = "move";
 const std::string allmoves_cmd = "allmoves";
 const std::string setside_cmd = "side";
+const std::string undo_cmd = "undo";
 const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-const std::string pawn_test = "8/3P4/8/8/8/8/8/8 w - - 0 1";
-const std::string knight_test = "n7/8/8/5N2/8/4N3/8/8 w q - 0 1";
-const std::string king_test = "8/8/8/8/ppp5/pkp5/ppp5/7k w Kk - 0 1";
-const std::string rook_test = "8/8/8/2rR2r1/3B4/8/8/8 w Qq - 0 1";
-const std::string bishop_test = "1r6/8/5r2/4B3/3Q1Q2/8/8/8 w Kkq - 0 1";
-const std::string queen_test = "4p2Q/6Q1/8/8/7p/8/8/8 b KQq - 0 1";
+const std::string pawn_test = "8/8/8/2p5/1P6/8/8/8 w - - 0 1";
+const std::string pawn_promo_test = "8/P7/8/8/8/8/8/8 w - - 0 1";
+const std::string enpassant_test = "8/8/8/3pP3/8/8/8/8 b - d6 0 1";
+const std::string knight_test = "n7/8/8/5N2/8/4N3/8/8 w - - 0 1";
+const std::string king_test = "8/8/8/8/ppp5/pkp5/ppp5/7k w - - 0 1";
+const std::string rook_test = "8/8/8/2rR2r1/3B4/8/8/8 w - - 0 1";
+const std::string bishop_test = "1r6/8/5r2/4B3/3Q1Q2/8/8/8 w - - 0 1";
+const std::string queen_test = "4p2Q/6Q1/8/8/7p/8/8/8 b - - 0 1";
 const std::string castling_test = "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1";
 
 extern std::unordered_map<std::string, std::string> positionPresets;
 
 enum class CommandType { HELP, POSITION, PRINT, QUIT, MOVE, 
-						ALLMOVES, SIDE, UNKNOWN };
+						ALLMOVES, SIDE, UNDO, UNKNOWN };
 
 CommandType getCommand(const std::string& cmd);
 
@@ -56,6 +59,7 @@ class Interface {
 		void cmdMakeMove(const std::vector<std::string>& args);
 		void cmdDisplayMoves();
 		void cmdSwitchSide(const std::vector<std::string>& args);
+		void cmdUndo();
 
 		std::vector<std::string> split(const std::string& line, char delimiter = ' ');
 };
