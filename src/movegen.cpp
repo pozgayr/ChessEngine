@@ -6,6 +6,7 @@
 void MoveGenerator::genMoves(const Board &board) {
 	moves.clear();
 	Color side = board.side_to_move;
+	moveList pseudo_legal;
 	attack_mask = 0ULL;
 
 	MoveGenContext ctx{board, &moves, attack_mask, side};
@@ -17,29 +18,91 @@ void MoveGenerator::genMoves(const Board &board) {
 	bishopMoves(ctx);
 	queenMoves(ctx);
 	pawnAttackMoves(ctx);
+	castlingMoves(ctx);
 }
 
-bool MoveGenerator::squareAttacked(const Board &board, Color side, int square) {
-	uint64_t attacks = 0ULL;
-	MoveGenContext ctx = {board, nullptr, attacks, side};
+bool MoveGenerator::squareAttacked(const Board &board, Color side, const std::vector<int> &squares) {
+    uint64_t attacks = 0ULL;
+    MoveGenContext ctx{board, nullptr, attacks, side};
 
-	knightMoves(ctx);
-	kingMoves(ctx);
-	rookMoves(ctx);
-	bishopMoves(ctx);
-	queenMoves(ctx);
-	pawnAttackMoves(ctx);
-	
-	return (1ULL << square) & attacks;
+    auto checkSquares = [&](uint64_t attacks) {
+        for (int square : squares)
+            if ((1ULL << square) & attacks) return true;
+        return false;
+    };
+
+    pawnAttackMoves(ctx); if (checkSquares(attacks)) return true;
+    knightMoves(ctx);     if (checkSquares(attacks)) return true;
+    bishopMoves(ctx);     if (checkSquares(attacks)) return true;
+    rookMoves(ctx);       if (checkSquares(attacks)) return true;
+    queenMoves(ctx);      if (checkSquares(attacks)) return true;
+    kingMoves(ctx);       if (checkSquares(attacks)) return true;
+
+    return false;
+}
+
+bool MoveGenerator::kingInCheck(const Board &board, Color side) {
+	int king_piece = (side == WHITE) ? K : k;
+	int king_pos = __builtin_ctzll(board.bitboards[king_piece]);
+
+	Color enemy_side = static_cast<Color>(!side);
+
+	std::vector<int> pos_vector = {king_pos};
+
+	return squareAttacked(board, enemy_side, pos_vector);
 }
 
 void MoveGenerator::castlingMoves(MoveGenContext &ctx) {
+	Color side = ctx.side;
+	const Board &board = ctx.board;
+	Color enemy_side = static_cast<Color>(!side);
 	
+	if (side == WHITE) {
+	    if ((board.castling_rights & WK) &&
+	        !(board.occupancies[all] & ((1ULL << f1) | (1ULL << g1))) &&
+	        !squareAttacked(board, enemy_side, {e1, f1, g1})) {
+	        if (ctx.out_moves) {
+	            Move m{e1, g1, K};
+	            m.castling = WK;
+	            ctx.out_moves->push_back(m);
+	        }
+	    }
+	
+	    if ((board.castling_rights & WQ) &&
+	        !(board.occupancies[all] & ((1ULL << b1) | (1ULL << c1) | (1ULL << d1))) &&
+	        !squareAttacked(board, enemy_side, {e1, d1, c1})) {
+	        if (ctx.out_moves) {
+	            Move m{e1, c1, K};
+	            m.castling = WQ;
+	            ctx.out_moves->push_back(m);
+	        }
+	    }
+	} else {
+	    if ((board.castling_rights & BK) &&
+	        !(board.occupancies[all] & ((1ULL << f8) | (1ULL << g8))) &&
+	        !squareAttacked(board, enemy_side, {e8, f8, g8})) {
+	        if (ctx.out_moves) {
+	            Move m{e8, g8, k};
+	            m.castling = BK;
+	            ctx.out_moves->push_back(m);
+	        }
+	    }
+	
+	    if ((board.castling_rights & BQ) &&
+	        !(board.occupancies[all] & ((1ULL << b8) | (1ULL << c8) | (1ULL << d8))) &&
+	        !squareAttacked(board, enemy_side, {e8, d8, c8})) {
+	        if (ctx.out_moves) {
+	            Move m{e8, c8, k};
+	            m.castling = BQ;
+	            ctx.out_moves->push_back(m);
+	        }
+	    }
+	}	
 }
 
 void MoveGenerator::queenMoves(MoveGenContext &ctx) {
 	Color side = ctx.side;
-	Board board = ctx.board;
+	const Board &board = ctx.board;
 	int queen_piece = (side == WHITE) ? Q : q;
 	uint64_t queens = board.bitboards[queen_piece];
 
@@ -52,7 +115,7 @@ void MoveGenerator::queenMoves(MoveGenContext &ctx) {
 
 void MoveGenerator::rookMoves(MoveGenContext &ctx)  {
 	Color side = ctx.side;
-	Board board = ctx.board;
+	const Board &board = ctx.board;
 	int rook_piece = (side == WHITE) ? R : r;
 	uint64_t rooks = board.bitboards[rook_piece];
 	
@@ -65,7 +128,7 @@ void MoveGenerator::rookMoves(MoveGenContext &ctx)  {
 
 void MoveGenerator::bishopMoves(MoveGenContext &ctx) {
 	Color side = ctx.side;
-	Board board = ctx.board;
+	const Board &board = ctx.board;
 	int bishop_piece = (side == WHITE) ? B : b;
 	uint64_t bishops = board.bitboards[bishop_piece];
 
@@ -79,7 +142,7 @@ void MoveGenerator::bishopMoves(MoveGenContext &ctx) {
 void MoveGenerator::traverseDirection(int from, const int directions[][2], 
 									  int count, int piece, MoveGenContext &ctx) {
 	Color side = ctx.side;
-	Board board = ctx.board;
+	const Board &board = ctx.board;
 	uint64_t ally = board.occupancies[side];
 	uint64_t enemy = board.occupancies[!side];
 
@@ -107,7 +170,7 @@ void MoveGenerator::traverseDirection(int from, const int directions[][2],
 
 void  MoveGenerator::kingMoves(MoveGenContext &ctx) {
 	Color side = ctx.side;
-	Board board = ctx.board;
+	const Board &board = ctx.board;
 	int king_piece = (side == WHITE) ? K : k;	
 	uint64_t king = board.bitboards[king_piece];
 	uint64_t ally_pieces = board.occupancies[side];
@@ -128,7 +191,7 @@ void  MoveGenerator::kingMoves(MoveGenContext &ctx) {
 
 void MoveGenerator::knightMoves(MoveGenContext &ctx) {
 	Color side = ctx.side;
-	Board board = ctx.board;
+	const Board &board = ctx.board;
 	int knight_piece = (side == WHITE) ? N : n;
 	uint64_t knights = board.bitboards[knight_piece];
 	uint64_t ally_pieces = board.occupancies[side];
@@ -150,7 +213,7 @@ void MoveGenerator::knightMoves(MoveGenContext &ctx) {
 
 void MoveGenerator::pawnAttackMoves(MoveGenContext &ctx) {
 	Color side = ctx.side;
-	Board board = ctx.board;
+	const Board &board = ctx.board;
 	int pawn_piece = (side == WHITE) ? P : p;
 	uint64_t pawns = board.bitboards[pawn_piece];
 	uint64_t opponent = board.occupancies[!side];

@@ -191,7 +191,6 @@ Move Interface::parseMoveInput(const std::string &input, Color side) {
 	m.from = notationToSquare(input.substr(0, 2));
     m.to = notationToSquare(input.substr(2, 2));
 	m.promotion = 0;
-	m.enpassant = 0;
    	
     if (input.size() == 5) {
        switch (input[4]) {

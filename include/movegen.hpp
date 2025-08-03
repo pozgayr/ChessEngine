@@ -50,7 +50,8 @@ class MoveGenerator {
 		std::vector<Move> moves;
 		uint64_t attack_mask;
 		void genMoves(const Board &board);
-		bool squareAttacked(const Board &board, Color side, int square);
+		bool squareAttacked(const Board &board, Color side, const std::vector<int> &squares);
+		bool kingInCheck(const Board &board, Color side);
 		
 };
 

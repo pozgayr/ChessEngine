@@ -150,6 +150,27 @@ void Board::makeMove(const Move& move) {
 	    	}
 	    }
 
+	    if (move.castling) { //move rook
+	    	 switch (move.castling) {
+		        case WK: 
+		            bitboards[R] &= ~(1ULL << h1);
+		            bitboards[R] |=  (1ULL << f1);
+		            break;
+		        case WQ: 
+		            bitboards[R] &= ~(1ULL << a1);
+		            bitboards[R] |=  (1ULL << d1);
+		            break;
+		        case BK: 
+		            bitboards[r] &= ~(1ULL << h8);
+		            bitboards[r] |=  (1ULL << f8);
+		            break;
+		        case BQ: 
+		            bitboards[r] &= ~(1ULL << a8);
+		            bitboards[r] |=  (1ULL << d8);
+		            break;
+    		}
+	    }
+
 		castling_rights &= LookupTables::castlingRightsTable[move.from][move.to];
 		std::cout << castling_rights << "\n";
 		side_to_move = (side_to_move == WHITE) ? BLACK : WHITE;
