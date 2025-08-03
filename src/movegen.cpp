@@ -9,9 +9,9 @@ void MoveGenerator::genMoves(const Board &board) {
 	moveList pseudo_legal;
 	attack_mask = 0ULL;
 
-	MoveGenContext ctx{board, &moves, attack_mask, side};
+	MoveGenContext ctx{board, &pseudo_legal, attack_mask, side};
 	
-	pawnMoves(board, moves);
+	pawnMoves(board, pseudo_legal);
 	knightMoves(ctx);
 	kingMoves(ctx);
 	rookMoves(ctx);
@@ -19,6 +19,23 @@ void MoveGenerator::genMoves(const Board &board) {
 	queenMoves(ctx);
 	pawnAttackMoves(ctx);
 	castlingMoves(ctx);
+
+	Board board_copy = board;
+
+	for (auto &move : pseudo_legal) {
+		if (isMoveLegal(move, board_copy)) {
+			moves.push_back(move);
+		}
+	}
+}
+
+bool MoveGenerator::isMoveLegal(const Move &m, Board &board) {
+	Color side = board.side_to_move;
+	board.makeMove(m);
+	bool legal = !kingInCheck(board, side);
+	board.unmakeMove();
+
+	return legal;
 }
 
 bool MoveGenerator::squareAttacked(const Board &board, Color side, const std::vector<int> &squares) {

@@ -52,6 +52,7 @@ class MoveGenerator {
 		void genMoves(const Board &board);
 		bool squareAttacked(const Board &board, Color side, const std::vector<int> &squares);
 		bool kingInCheck(const Board &board, Color side);
+		bool isMoveLegal(const Move &move, Board &board);
 		
 };
 

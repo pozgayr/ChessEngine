@@ -1,6 +1,8 @@
 #ifndef MOVE_HPP
 #define MOVE_HPP
 
+#include <string>
+
 struct Move {
 	int from;
 	int to;
@@ -14,6 +16,14 @@ struct Move {
 	        to == other.to &&
 	        promotion == other.promotion;
     }
+    
+	std::string toString() const {
+		static const char files[] = "abcdefgh";
+		static const char ranks[] = "12345678";
+		return std::string() +
+		    files[from % 8] + ranks[from / 8] +
+		    files[to % 8] + ranks[to / 8];
+	}
 };
 
 #endif

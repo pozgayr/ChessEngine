@@ -39,7 +39,7 @@ enum Square {
 struct Undo {
 	int captured_piece;
 	unsigned int prev_castling_rights;
-	int prev_enpassant;
+	uint64_t prev_enpassant;
 };
 
 enum Occupancies { black, white, all };
