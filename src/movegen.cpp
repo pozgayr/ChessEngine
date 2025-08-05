@@ -1,9 +1,9 @@
-#include "movegen.hpp"
+ #include "movegen.hpp"
 #include "movetables.hpp"
 #include <bit>
 #include <array>
 
-void MoveGenerator::genMoves(const Board &board) {
+void MoveGenerator::genMoves(Board &board) {
 	moves.clear();
 	Color side = board.side_to_move;
 	moveList pseudo_legal;
@@ -20,11 +20,9 @@ void MoveGenerator::genMoves(const Board &board) {
 	pawnAttackMoves(ctx);
 	castlingMoves(ctx);
 
-	Board board_copy = board;
-
 	for (auto &move : pseudo_legal) {
-		if (isMoveLegal(move, board_copy)) {
-			moves.push_back(move);
+		if (isMoveLegal(move, board)) {
+			moves.push_back(move);		
 		}
 	}
 }
@@ -39,22 +37,30 @@ bool MoveGenerator::isMoveLegal(const Move &m, Board &board) {
 }
 
 bool MoveGenerator::squareAttacked(const Board &board, Color side, const std::vector<int> &squares) {
+	uint64_t all_squares = 0ULL;
+	for (int sq : squares) {
+		all_squares |= (1ULL << sq);
+	}
     uint64_t attacks = 0ULL;
     MoveGenContext ctx{board, nullptr, attacks, side};
 
-    auto checkSquares = [&](uint64_t attacks) {
-        for (int square : squares)
-            if ((1ULL << square) & attacks) return true;
-        return false;
+    auto attacked = [&](uint64_t attacks) {
+        return (attacks & all_squares) != 0ULL;
     };
 
-    pawnAttackMoves(ctx); if (checkSquares(attacks)) return true;
-    knightMoves(ctx);     if (checkSquares(attacks)) return true;
-    bishopMoves(ctx);     if (checkSquares(attacks)) return true;
-    rookMoves(ctx);       if (checkSquares(attacks)) return true;
-    queenMoves(ctx);      if (checkSquares(attacks)) return true;
-    kingMoves(ctx);       if (checkSquares(attacks)) return true;
-
+	pawnAttackMoves(ctx);
+    if (attacked(attacks)) return true;
+    knightMoves(ctx);
+    if (attacked(attacks)) return true;
+    bishopMoves(ctx);
+    if (attacked(attacks)) return true;
+    rookMoves(ctx);
+    if (attacked(attacks)) return true;
+    queenMoves(ctx);
+    if (attacked(attacks)) return true;
+    kingMoves(ctx);
+    if (attacked(attacks)) return true;
+	
     return false;
 }
 
@@ -235,48 +241,72 @@ void MoveGenerator::pawnAttackMoves(MoveGenContext &ctx) {
 	uint64_t pawns = board.bitboards[pawn_piece];
 	uint64_t opponent = board.occupancies[!side];
 
-	uint64_t left_capture = (side == WHITE) ? ((pawns << (size - 1)) & ~fileA & opponent)
-												: ((pawns >> (size - 1)) & ~fileH & opponent);
+	uint64_t promotion_rank = (side == WHITE) ? rank8 : rank1;
+
+	uint64_t left_capture = (side == WHITE) ? ((pawns & ~fileA) << (size - 1))
+												: ((pawns & ~fileH)  >> (size - 1));
+
+	uint64_t right_capture = (side == WHITE) ? ((pawns & ~fileH) << (size + 1))
+											 :((pawns & ~fileA) >> (size + 1));
+
+	std::array<int, 4> promotion_pieces = (side == WHITE)
+    	? std::array<int, 4>{Q, R, B, N}
+	    : std::array<int, 4>{q, r, b, n};
+												
 	
 	while (left_capture) {
 		int to = __builtin_ctzll(left_capture);
 		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
-		if (ctx.out_moves) ctx.out_moves->push_back({from, to, pawn_piece});
+		if ((1ULL << to) & promotion_rank) {
+			for (int promo_piece : promotion_pieces) {
+				if (ctx.out_moves && ((1ULL << to) & opponent)) {
+					Move m{from, to, pawn_piece};
+					m.promotion = promo_piece;
+					ctx.out_moves->push_back(m);
+				}
+			}
+		} else if (ctx.out_moves && ((1ULL << to) & opponent))  ctx.out_moves->push_back({from, to, pawn_piece});
 		ctx.attack_mask |= (1ULL << to);
 		left_capture &= left_capture - 1;
 	}
 
-	uint64_t right_capture = (side == WHITE) ? ((pawns << (size + 1)) & ~fileH & opponent)
-											 : ((pawns >> (size + 1)) & ~fileA & opponent);
-
 	while (right_capture) {
 		int to = __builtin_ctzll(right_capture);
 		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
-		if (ctx.out_moves) ctx.out_moves->push_back({from, to, pawn_piece});
+		if ((1ULL << to) & promotion_rank) {
+			for (int promo_piece : promotion_pieces) {
+				if (ctx.out_moves && ((1ULL << to) & opponent)) {
+					Move m{from, to, pawn_piece};
+					m.promotion = promo_piece;
+					ctx.out_moves->push_back(m); 
+				}
+			}
+		} else if (ctx.out_moves && ((1ULL << to) & opponent)) ctx.out_moves->push_back({from, to, pawn_piece});
 		ctx.attack_mask |= (1ULL << to);
 		right_capture &= right_capture - 1;
 	}
 
-	uint64_t enpassant_left = (side == WHITE) ? ((pawns << (size - 1)) & ~fileA & board.enpassant)
-											  : ((pawns >> (size - 1)) & ~fileH & board.enpassant);
+
+	uint64_t enpassant_left = (side == WHITE) ? ((pawns & ~fileA) << (size - 1)) & board.enpassant
+											  : ((pawns & ~fileA) >> (size + 1)) & board.enpassant;
 											  
 	if (enpassant_left) {
-		int to = __builtin_ctzll(enpassant_left);
-		int from = (side == WHITE) ? to - (size - 1) : to + (size - 1);
-		if (ctx.out_moves) {
-			Move m{from, to, pawn_piece};
-			m.enpassant = true;
-			ctx.out_moves->push_back(m);	
-		}
-		ctx.attack_mask |= (1ULL << to);
+	    int to = __builtin_ctzll(enpassant_left);
+	    int from = (side == WHITE) ? to - (size - 1) : to + (size + 1);
+	    if (ctx.out_moves) {
+	        Move m{from, to, pawn_piece};
+	        m.enpassant = true;
+	        ctx.out_moves->push_back(m);
+	    }
+	    ctx.attack_mask |= (1ULL << to);
 	}
 
-	uint64_t enpassant_right = (side == WHITE) ? ((pawns << (size + 1)) & ~fileH & board.enpassant)
-											   : ((pawns >> (size + 1)) & ~fileA & board.enpassant);
+	uint64_t enpassant_right = (side == WHITE) ? ((pawns & ~fileH) << (size + 1)) & board.enpassant
+											   : ((pawns & ~fileH) >> (size - 1)) & board.enpassant;
 
-	if (enpassant_right) {
+	 if (enpassant_right) {
 		int to = __builtin_ctzll(enpassant_right);
-		int from = (side == WHITE) ? to - (size + 1) : to + (size + 1);
+		int from = (side == WHITE) ? to - (size + 1) : to + (size - 1);
 		if (ctx.out_moves) {
 			Move m{from, to, pawn_piece};
 			m.enpassant = true;

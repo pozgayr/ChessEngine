@@ -6,28 +6,46 @@ void Board::setBit(uint64_t &bb, int square) {
 	bb |= (1ULL << square); //1ULL -  1 unsigned long long (64b)
 }							//shifted right by the square positions
 
-void Board::printBoard() {
+void Board::printBoard(int bitboard_index) {
 	char display[board_size];
-	for (int i = 0; i < board_size; i++) display[i] = '.';
+	for (int i = 0; i < board_size; i++) display[i] = ' ';
 
 	const char piece_chars[12] = {'P','N','B','R','Q','K','p','n','b','r','q','k'};
 
-	for (int p = 0; p < bitboard_count; p++) {
-		uint64_t bb = bitboards[p];
-
-		while (bb) {
-			int square = __builtin_ctzll(bb); //count trailing zeroes (hw instruct) 
-			display[square] = piece_chars[p];
-			bb &= bb - 1; //remove lsb
+	if (bitboard_index == -1) {
+		for (int p = 0; p < bitboard_count; p++) {
+			uint64_t bb = bitboards[p];
+	
+			while (bb) {
+				int square = __builtin_ctzll(bb); //count trailing zeroes (hw instruct) 
+				display[square] = piece_chars[p];
+				bb &= bb - 1; //remove lsb
+			}
+		}	
+	} else {
+		if (bitboard_index < 0 || bitboard_index >= bitboard_count) {
+			std::cout << "Invalid bitboard index\n";
+			return;
+		} 
+		uint64_t bb = bitboards[bitboard_index];
+		char piece = piece_chars[bitboard_index];
+		while(bb) {
+			int square = __builtin_ctzll(bb); 
+			display[square] = piece;
+			bb &= bb - 1;
 		}
 	}
-
-	for (int rank = size - 1 ; rank >= 0; rank--) {
-		for (int file = 0; file < size; file++) {
-			std::cout << display[rank * size + file] << ' ';
-		}
-		std::cout << '\n';
-	}
+	std::cout << " +---+---+---+---+---+---+---+---+\n";
+    for (int rank = 7; rank >= 0; rank--) {
+        std::cout << " |";
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            std::cout << " " << display[square] << " |";
+        }
+        std::cout << " " << (rank + 1) << "\n";
+        std::cout << " +---+---+---+---+---+---+---+---+\n";
+    }
+    std::cout << "   a   b   c   d   e   f   g   h\n";
 
 	std::cout << (side_to_move ? "White" : "Black") << " to move\n";
 }
@@ -113,7 +131,6 @@ void Board::setBoard(const std::string& fen) {
 		enpassant = 1ULL << enpassant_square;
 		idx += 2;
 	}
-
 	updateOccupancies();
 }
 
@@ -150,10 +167,10 @@ void Board::makeMove(const Move& move) {
     if (move.enpassant) {
     	if (side_to_move == WHITE) {
     		bitboards[p] &= ~((1ULL << move.to) >> size);
-    		u.captured_piece = P;
+    		u.captured_piece = p;
     	} else {
     		bitboards[P] &= ~((1ULL << move.to) << size);
-    		u.captured_piece = p;
+    		u.captured_piece = P;
     	}
     }
 
@@ -191,9 +208,6 @@ void Board::unmakeMove() {
 	Move move = move_stack.back();
 	move_stack.pop_back();
 
-	Color attacker_side = side_to_move;
-	side_to_move = static_cast<Color>(!side_to_move);
-
 	enpassant = u.prev_enpassant;
 	castling_rights = u.prev_castling_rights;
 
@@ -204,13 +218,12 @@ void Board::unmakeMove() {
 
 	 if (u.captured_piece != NONE) {
         if (move.enpassant) {
-            int captured_square = (attacker_side == WHITE) ? move.to - size : move.to + size;
+            int captured_square = (side_to_move == WHITE) ? move.to + size : move.to - size;
             bitboards[u.captured_piece] |= (1ULL << captured_square);
         } else {
             bitboards[u.captured_piece] |= (1ULL << move.to);
         }
     }
-
     if (move.castling) {
         if (move.to == g1) { 
             bitboards[R] &= ~(1ULL << f1);
@@ -229,5 +242,18 @@ void Board::unmakeMove() {
             bitboards[r] |= (1ULL << a8);
         }
     }
+    side_to_move = static_cast<Color>(!side_to_move);
     updateOccupancies();
 }
+
+std::string Board::signature() const {
+    std::string sig;
+    for (int i = 0; i < bitboard_count; i++) {
+        sig += std::to_string(bitboards[i]) + "|";
+    }
+    sig += std::to_string(enpassant) + "|";
+    sig += std::to_string(castling_rights) + "|";
+    sig += std::to_string(side_to_move);
+    return sig;
+}
+

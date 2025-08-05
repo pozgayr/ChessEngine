@@ -22,6 +22,7 @@ CommandType getCommand(const std::string& cmd) {
     if (cmd == allmoves_cmd) return CommandType::ALLMOVES;
     if (cmd == setside_cmd) return CommandType::SIDE;
     if (cmd == undo_cmd) return CommandType::UNDO;
+    if (cmd == perft_cmd) return CommandType::PERFT;
     return CommandType::UNKNOWN;
 }
 
@@ -55,7 +56,7 @@ void Interface::executeCommand(const std::vector<std::string>& args, bool& quit)
 			cmdSetPosition(args);
 			break;
 		case CommandType::PRINT:
-			cmdPrint();
+			cmdPrint(args);
 			break;
 		case CommandType::QUIT:
 			std::cout << "Exiting...\n";
@@ -65,13 +66,16 @@ void Interface::executeCommand(const std::vector<std::string>& args, bool& quit)
 			cmdMakeMove(args);
 			break;
 		case CommandType::ALLMOVES:
-			cmdDisplayMoves();
+			cmdDisplayMoves(args);
 			break;
 		case CommandType::SIDE:
 			cmdSwitchSide(args);
 			break;
 		case CommandType::UNDO:
 			cmdUndo();
+			break;
+		case CommandType::PERFT:
+			cmdPerft(args);
 			break;
 		case CommandType::UNKNOWN:
 		default:
@@ -106,8 +110,16 @@ std::vector<std::string> Interface::split(const std::string& line, char delimite
 	return tokens;
 }
 
-void Interface::cmdUndo() {
+void Interface::cmdPerft(const std::vector<std::string>& args) {
+	if (args.size() != 2) {
+		std::cout << "Error: perft requires exactly 2 arguments\n";
+		return;
+	}
+	int depth = std::stoi(args.at(1));
+	perftDivide(board, depth);
+}
 
+void Interface::cmdUndo() {
 	if (board.undo_stack.empty()) {
 		std::cout << "Error: no moves were made yet\n";
 		return;
@@ -166,8 +178,24 @@ void Interface::cmdHelp() {
               << "  quit / q               - Exit\n";
 }
 
-void Interface::cmdPrint() {
-	board.printBoard();
+void Interface::cmdPrint(const std::vector<std::string>& args) {
+	if (args.size() > 2) {
+		std::cout << "Error: print requieres at most 2 argument\n";
+		return;
+	}
+
+	if (args.size() == 2) {
+		std::string piece_arg = args.at(1);
+		if (piece_arg.size() == 1) {
+			char c = piece_arg[0];
+			int index = piece_to_index.at(c);
+			board.printBoard(index);	
+		} else {
+			std::cout << "Error: incorrect piece string\n";
+		}
+	} else {
+		board.printBoard();
+	}
 }
 
 void Interface::cmdMakeMove(const std::vector<std::string>& args) {
@@ -195,10 +223,41 @@ void Interface::cmdMakeMove(const std::vector<std::string>& args) {
 	std::cout << "Invalid move\n";
 }
 
-void Interface::cmdDisplayMoves() {
+void Interface::cmdDisplayMoves(const std::vector<std::string>& args) {
+	if (args.size() > 2) {
+		std::cout << "Error: moves requires 1 argument\n";
+		return;
+	}
+
 	moveGen.genMoves(board);
-	printMoves(moveGen.moves);
+	std::vector<Move> filteredMoves;
+
+	if (args.size() == 1) {
+		printMoves(moveGen.moves);
+		return;
+	}
+	std::string piece_type = args.at(1);
+
+	for (const auto &move : moveGen.moves) {
+		if (pieceMatches(move, piece_type)) {
+	    	filteredMoves.push_back(move);
+		}
+    }
+	printMoves(filteredMoves);
 }
+
+bool Interface::pieceMatches(const Move &move, const std::string &type) {
+    switch (move.piece) {
+        case P: case p: return type == "p";
+        case N: case n: return type == "n";
+        case B: case b: return type == "b";
+        case R: case r: return type == "r";
+        case Q: case q: return type == "q";
+        case K: case k: return type == "k";
+        default: return false;
+    }
+}
+
 
 Move Interface::parseMoveInput(const std::string &input, Color side) {
 	Move m;

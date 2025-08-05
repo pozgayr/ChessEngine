@@ -54,6 +54,32 @@ class Board {
 		void setBit(uint64_t &bb, int square);
 		
 	public:
+		bool operator==(const Board &other) const {  
+		    for (int i = 0; i < bitboard_count; i++) {
+		        if (bitboards[i] != other.bitboards[i]) {
+		        	std::cout << "bitboard: " << i << "\n";
+		        	return false;
+		        }
+		    }
+		    for (int i = 0; i < occupancy_count; i++) {
+		        if (occupancies[i] != other.occupancies[i]) {
+		        	std::cout << "occupancy: " << i << "\n";
+		        	return false;
+		        }
+		    }
+		    for (size_t i = 0; i < undo_stack.size(); i++) {
+	            const Undo &u1 = undo_stack[i];
+	            const Undo &u2 = other.undo_stack[i];
+	            if (u1.captured_piece != u2.captured_piece ||
+	                u1.prev_castling_rights != u2.prev_castling_rights ||
+	                u1.prev_enpassant != u2.prev_enpassant) {
+	                return false;
+	            }
+	        }
+		    return (enpassant == other.enpassant &&
+		            castling_rights == other.castling_rights &&
+		            side_to_move == other.side_to_move);
+		}
 		uint64_t bitboards[bitboard_count] = {0};
 		uint64_t occupancies[occupancy_count] = {0};
 		uint64_t enpassant = 0;
@@ -63,10 +89,11 @@ class Board {
 		std::vector<Move> move_stack;
 		std::vector<Undo> undo_stack;
 		
-		void printBoard();
+		void printBoard(int bitboard_index = -1);
 		void setBoard(const std::string& fen);
 		void makeMove(const Move& move);
 		void unmakeMove();
+		std::string signature() const;
 };
 
 #endif
