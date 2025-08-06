@@ -7,7 +7,6 @@ uint64_t perft(Board &board, int depth) {
 	gen.genMoves(board);
 
 	uint64_t nodes = 0;
-	std::string sig_before = board.signature();
 	for (auto &move : gen.moves) {
 		board.makeMove(move);
 		nodes += perft(board, depth-1);
