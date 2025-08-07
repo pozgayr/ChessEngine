@@ -23,6 +23,8 @@ CommandType getCommand(const std::string& cmd) {
     if (cmd == setside_cmd) return CommandType::SIDE;
     if (cmd == undo_cmd) return CommandType::UNDO;
     if (cmd == perft_cmd) return CommandType::PERFT;
+    if (cmd == setplayer_cmd) return CommandType::SETPLAYER;
+    if (cmd == start_cmd) return CommandType::START;
     return CommandType::UNKNOWN;
 }
 
@@ -31,6 +33,9 @@ void Interface::loop() {
 	bool quit = false;
 
 	while (!quit) {
+		if (game_running) {
+			gameManager();
+		}
 		std::cout << "> ";
 		if (!std::getline(std::cin, current_command)) break;
 
@@ -39,6 +44,35 @@ void Interface::loop() {
 		std::vector<std::string> parsed_command = split(current_command, ' ');
 	
 		executeCommand(parsed_command, quit);
+	}
+}
+
+void Interface::gameManager() {
+
+	while (true) {
+		GameState state = moveGen.genMoves(board);
+		PlayerType current = (board.side_to_move == WHITE) ? player_w : player_b;
+		std::string side = (board.side_to_move == WHITE) ? "white" : "black";
+	
+		if (state == CHECKMATE) {
+			std::cout << "Game ended: " << board.side_to_move <<" won by checkmate\n";
+			game_running = false;
+			break;
+		} else if (state == STALEMATE) {
+			std::cout << "Game ended: draw\n";
+			game_running = false;
+			break;
+		}
+		if (current == HUMAN) {
+			break;
+		} else if (current == AI) {
+			//std::cout << "AI thinking...\n";
+			Move ai_move = search.search(board, 5);
+			std::cout << "AI plays: " << squareToNotation(ai_move.from) 
+					  << squareToNotation(ai_move.to) << "\n";
+			board.makeMove(ai_move);
+			board.printBoard(-1);
+		}	
 	}
 }
 
@@ -77,6 +111,12 @@ void Interface::executeCommand(const std::vector<std::string>& args, bool& quit)
 		case CommandType::PERFT:
 			cmdPerft(args);
 			break;
+		case CommandType::SETPLAYER:
+			cmdSetPlayer(args);
+			break;
+		case CommandType::START:
+			cmdStart();
+			break;
 		case CommandType::UNKNOWN:
 		default:
 			std::cout << "Unknown command: " << args.at(0) << "\n";
@@ -110,6 +150,14 @@ std::vector<std::string> Interface::split(const std::string& line, char delimite
 	return tokens;
 }
 
+void Interface::cmdStart() {
+	if (player_w == NOTSET || player_b == NOTSET) {
+		std::cout << "Error: players are not set\n";
+		return;
+	}
+	game_running = true;
+}
+
 void Interface::cmdPerft(const std::vector<std::string>& args) {
 	if (args.size() != 2) {
 		std::cout << "Error: perft requires exactly 2 arguments\n";
@@ -127,6 +175,25 @@ void Interface::cmdUndo() {
 	board.unmakeMove();
 }
 
+void Interface::cmdSetPlayer(const std::vector<std::string>& args) {
+	if (args.size() != 3) {
+		std::cout << "Error: player requires exactly 3 arguments\n";
+		return;
+	}
+
+	PlayerType type = (args.at(2) == "ai") ? PlayerType::AI : PlayerType::HUMAN;
+
+	if (args.at(1) == "white" || args.at(1) == "w") {
+		player_w = type;
+		return;
+	} 
+	if (args.at(1) == "black" || args.at(1) == "b") {
+		player_b = type;
+		return;
+	}
+	std::cout << "Error: unknown player argument\n";
+}
+
 void Interface::cmdSwitchSide(const std::vector<std::string>& args) {
 	if (args.size() < 2) {
 		std::cout << "Error: side requires exactly 2 arguments\n";
@@ -140,7 +207,7 @@ void Interface::cmdSwitchSide(const std::vector<std::string>& args) {
 		board.side_to_move = BLACK;
 		return;
 	}
-	std::cout << "Error unknown side argument\n";
+	std::cout << "Error: unknown side argument\n";
 } 
 
 void Interface::cmdSetPosition(const std::vector<std::string>& args) {

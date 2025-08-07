@@ -33,6 +33,10 @@ struct MoveGenContext {
 	Color side;
 };
 
+enum GameState {
+	ONGOING, CHECKMATE, STALEMATE
+};
+
 class MoveGenerator {
 	private:
 		void pawnMoves(const Board& board, moveList &out_moves);
@@ -49,7 +53,7 @@ class MoveGenerator {
 	public:
 		std::vector<Move> moves;
 		uint64_t attack_mask;
-		void genMoves(Board &board);
+		GameState genMoves(Board &board);
 		bool squareAttacked(const Board &board, Color side, const std::vector<int> &squares);
 		bool kingInCheck(const Board &board, Color side);
 		bool isMoveLegal(const Move &move, Board &board);

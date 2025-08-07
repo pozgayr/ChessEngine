@@ -3,7 +3,7 @@
 #include <bit>
 #include <array>
 
-void MoveGenerator::genMoves(Board &board) {
+GameState MoveGenerator::genMoves(Board &board) {
 	moves.clear();
 	Color side = board.side_to_move;
 	moveList pseudo_legal;
@@ -25,6 +25,14 @@ void MoveGenerator::genMoves(Board &board) {
 			moves.push_back(move);		
 		}
 	}
+
+	GameState current_state = ONGOING;
+	if (moves.empty() && kingInCheck(board, side)) {
+		current_state = CHECKMATE;
+	} else if(moves.empty()) {
+		current_state = STALEMATE;
+	}
+	return current_state;
 }
 
 bool MoveGenerator::isMoveLegal(const Move &m, Board &board) {

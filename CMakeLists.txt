@@ -13,6 +13,8 @@ add_library(chess_engine_lib
     src/movegen.cpp
     src/movetables.cpp
     src/perft.cpp
+    src/eval.cpp
+    src/search.cpp
 )
 target_include_directories(chess_engine_lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
 

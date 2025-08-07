@@ -5,6 +5,7 @@
 #include "move.hpp"
 #include "movegen.hpp"
 #include "perft.hpp"
+#include "search.hpp"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -21,6 +22,8 @@ const std::string allmoves_cmd = "allmoves";
 const std::string setside_cmd = "side";
 const std::string undo_cmd = "undo";
 const std::string perft_cmd = "perft";
+const std::string setplayer_cmd = "player";
+const std::string start_cmd = "start";
 const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const std::string pawn_test = "8/8/8/2p5/1P6/8/8/8 w - - 0 1";
 const std::string pawn_promo_test = "2r1r3/3P4/8/8/8/8/8/8 w - - 0 1";
@@ -35,7 +38,8 @@ const std::string castling_test = "r3k2r/8/8/8/8/8/6p1/R3K2R b KQkq - 0 1";
 extern std::unordered_map<std::string, std::string> positionPresets;
 
 enum class CommandType { HELP, POSITION, PRINT, QUIT, MOVE, 
-						ALLMOVES, SIDE, UNDO, PERFT,  UNKNOWN };
+						 ALLMOVES, SIDE, UNDO, PERFT, SETPLAYER, 
+						 START, UNKNOWN };
 
 const std::unordered_map<char, int> piece_to_index = {
     {'P', 0}, {'N', 1}, {'B', 2}, {'R', 3}, {'Q', 4}, {'K', 5},
@@ -43,6 +47,10 @@ const std::unordered_map<char, int> piece_to_index = {
 };
 
 CommandType getCommand(const std::string& cmd);
+
+enum PlayerType {
+	NOTSET, HUMAN, AI
+};
 
 class Interface {
 	public:
@@ -54,11 +62,14 @@ class Interface {
 
 		void printMoves(std::vector<Move>& moves);
 
-		
 	private:
 		Board board;
 		MoveGenerator moveGen;
-
+		Search search;
+		bool game_running = false;
+		PlayerType player_w = NOTSET;
+		PlayerType player_b = NOTSET;
+	
 		void executeCommand(const std::vector<std::string>&, bool& quit);
 		void cmdSetPosition(const std::vector<std::string>& args);
 		void cmdPrint(const std::vector<std::string>& args);
@@ -68,7 +79,11 @@ class Interface {
 		void cmdSwitchSide(const std::vector<std::string>& args);
 		void cmdUndo();
 		void cmdPerft(const std::vector<std::string>& args);
+		void cmdSetPlayer(const std::vector<std::string>& args);
+		void cmdStart();
 		bool pieceMatches(const Move &move, const std::string &type);
+
+		void gameManager();
 
 		std::vector<std::string> split(const std::string& line, char delimiter = ' ');
 };
