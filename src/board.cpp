@@ -256,4 +256,3 @@ std::string Board::signature() const {
     sig += std::to_string(side_to_move);
     return sig;
 }
-

@@ -10,6 +10,7 @@ struct Move {
 	int promotion = 0;
 	bool enpassant = false;
 	unsigned int castling = 0;
+	int capture = -1;
 
  	bool operator==(const Move &other) const {
 	    return from == other.from &&

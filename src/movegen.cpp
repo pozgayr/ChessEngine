@@ -83,6 +83,15 @@ bool MoveGenerator::kingInCheck(const Board &board, Color side) {
 	return squareAttacked(board, enemy_side, pos_vector);
 }
 
+int MoveGenerator::findCapturePiece(const Board &board, int to) {
+	for (int piece = 0; piece < bitboard_count; piece++) {
+		if (board.bitboards[piece] & (1ULL << to)) {
+			return piece;
+		}
+	}
+	return NONE;
+}
+
 void MoveGenerator::castlingMoves(MoveGenContext &ctx) {
 	Color side = ctx.side;
 	const Board &board = ctx.board;
@@ -193,8 +202,13 @@ void MoveGenerator::traverseDirection(int from, const int directions[][2],
 
 			ctx.attack_mask |= (1ULL << square);
 			if (ally & (1ULL << square)) break;
-			if (ctx.out_moves) ctx.out_moves->push_back({from, square, piece});
-			if (enemy & (1ULL << square)) break;
+			Move m{from, square, piece};
+			if (enemy & (1ULL << square)) {
+				m.capture = findCapturePiece(board, square);
+				if (ctx.out_moves) ctx.out_moves->push_back(m);
+				break;
+			} 
+			if (ctx.out_moves) ctx.out_moves->push_back(m);
 		}
 	}
 }
@@ -205,6 +219,7 @@ void  MoveGenerator::kingMoves(MoveGenContext &ctx) {
 	int king_piece = (side == WHITE) ? K : k;	
 	uint64_t king = board.bitboards[king_piece];
 	uint64_t ally_pieces = board.occupancies[side];
+	uint64_t enemy_pieces = board.occupancies[!side];
 
 	while (king) {
 		int from = __builtin_ctzll(king);
@@ -212,7 +227,13 @@ void  MoveGenerator::kingMoves(MoveGenContext &ctx) {
 
 		while (attacks) {
 			int to = __builtin_ctzll(attacks);
-			if (ctx.out_moves) ctx.out_moves->push_back({from, to, king_piece});
+			if (ctx.out_moves) {
+				Move m{from, to, king_piece};
+				if (enemy_pieces & (1ULL << to)) {
+					m.capture = findCapturePiece(board, to);
+				}
+				ctx.out_moves->push_back(m);	
+			}
 			ctx.attack_mask |= (1ULL << to);
 			attacks &= attacks - 1;
 		}
@@ -226,6 +247,7 @@ void MoveGenerator::knightMoves(MoveGenContext &ctx) {
 	int knight_piece = (side == WHITE) ? N : n;
 	uint64_t knights = board.bitboards[knight_piece];
 	uint64_t ally_pieces = board.occupancies[side];
+	uint64_t enemy_pieces = board.occupancies[!side];
 	
 	
 	while (knights) {
@@ -234,7 +256,13 @@ void MoveGenerator::knightMoves(MoveGenContext &ctx) {
 
 		while (attacks) {
 			int to = __builtin_ctzll(attacks);
-			if (ctx.out_moves) ctx.out_moves->push_back({from, to, knight_piece});
+			if (ctx.out_moves) {
+				Move m{from, to, knight_piece};
+				if (enemy_pieces & (1ULL << to)) {
+					m.capture = findCapturePiece(board, to);
+				}
+				ctx.out_moves->push_back(m);
+			} 
 			ctx.attack_mask |= (1ULL << to);
 			attacks &= attacks - 1;
 		}
@@ -270,10 +298,15 @@ void MoveGenerator::pawnAttackMoves(MoveGenContext &ctx) {
 				if (ctx.out_moves && ((1ULL << to) & opponent)) {
 					Move m{from, to, pawn_piece};
 					m.promotion = promo_piece;
+					m.capture = findCapturePiece(board, to);
 					ctx.out_moves->push_back(m);
 				}
 			}
-		} else if (ctx.out_moves && ((1ULL << to) & opponent))  ctx.out_moves->push_back({from, to, pawn_piece});
+		} else if (ctx.out_moves && ((1ULL << to) & opponent)) {
+			Move m{from, to, pawn_piece};
+			m.capture = findCapturePiece(board, to);
+			ctx.out_moves->push_back(m);
+		}  
 		ctx.attack_mask |= (1ULL << to);
 		left_capture &= left_capture - 1;
 	}
@@ -286,10 +319,15 @@ void MoveGenerator::pawnAttackMoves(MoveGenContext &ctx) {
 				if (ctx.out_moves && ((1ULL << to) & opponent)) {
 					Move m{from, to, pawn_piece};
 					m.promotion = promo_piece;
+					m.capture = findCapturePiece(board, to);
 					ctx.out_moves->push_back(m); 
 				}
 			}
-		} else if (ctx.out_moves && ((1ULL << to) & opponent)) ctx.out_moves->push_back({from, to, pawn_piece});
+		} else if (ctx.out_moves && ((1ULL << to) & opponent)) {
+			Move m{from, to, pawn_piece};
+			m.capture = findCapturePiece(board, to);
+			ctx.out_moves->push_back(m);	
+		} 
 		ctx.attack_mask |= (1ULL << to);
 		right_capture &= right_capture - 1;
 	}
@@ -304,6 +342,7 @@ void MoveGenerator::pawnAttackMoves(MoveGenContext &ctx) {
 	    if (ctx.out_moves) {
 	        Move m{from, to, pawn_piece};
 	        m.enpassant = true;
+	        m.capture = (side == WHITE) ? p : P;
 	        ctx.out_moves->push_back(m);
 	    }
 	    ctx.attack_mask |= (1ULL << to);
@@ -318,6 +357,7 @@ void MoveGenerator::pawnAttackMoves(MoveGenContext &ctx) {
 		if (ctx.out_moves) {
 			Move m{from, to, pawn_piece};
 			m.enpassant = true;
+		 	m.capture = (side == WHITE) ? p : P;
 			ctx.out_moves->push_back(m);	
 		}
 		ctx.attack_mask |= (1ULL << to);

@@ -67,7 +67,7 @@ void Interface::gameManager() {
 			break;
 		} else if (current == AI) {
 			//std::cout << "AI thinking...\n";
-			Move ai_move = search.search(board, 5);
+			Move ai_move = search.search(board, 6);
 			std::cout << "AI plays: " << squareToNotation(ai_move.from) 
 					  << squareToNotation(ai_move.to) << "\n";
 			board.makeMove(ai_move);

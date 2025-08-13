@@ -49,6 +49,7 @@ class MoveGenerator {
 		void castlingMoves(MoveGenContext &ctx);
 		void traverseDirection(int from, const int directions[][2], 
 							   int count, int piece, MoveGenContext &ctx);
+		int findCapturePiece(const Board &board, int to);
 						
 	public:
 		std::vector<Move> moves;

@@ -37,3 +37,10 @@ TEST_CASE_METHOD(PerftFixture, "Mirror position", "[perft]") {
 	REQUIRE(perft(board, 2) == 264);
 	REQUIRE(perft(board, 3) == 9467);
 }
+
+TEST_CASE_METHOD(PerftFixture, "AI TEST", "[perft]") {
+	board.setBoard("1Qk2b1r/2B3p1/3pN3/5p1p/2B2P2/7P/P1K5/8 b - - 0 1");
+	REQUIRE(perft(board, 1) == 1);
+	REQUIRE(perft(board, 2) == 41);
+	REQUIRE(perft(board, 3) == 361);
+}

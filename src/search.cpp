@@ -3,10 +3,12 @@
 Move Search::search(Board &board, int depth) {
 	BestMove best_move;
 	
-	best_move.score = (board.side_to_move) ? min_val : max_val;
+	best_move.score = (board.side_to_move == WHITE) ? min_val : max_val;
 	
 	MoveGenerator movegen;
 	movegen.genMoves(board);
+	if (!movegen.moves.empty()) best_move.move = movegen.moves[0];
+	
 	int alpha = min_val;
 	int beta = max_val;
 
@@ -27,13 +29,15 @@ Move Search::search(Board &board, int depth) {
 				best_move.score = score;
 			}
 		}
+		if (board.side_to_move == WHITE) alpha = std::max(alpha, score);
+        else beta = std::min(beta, score);
+		if (alpha >= beta) break;
 	}
-	std::cout << best_move.score << "\n";
-	std::cout << best_move.move.from << best_move.move.to << "\n";
 	return best_move.move;
 }
 
 int Search::maxi(Board &board, int depth, int alpha, int beta) {
+	assert(board.side_to_move == WHITE);
 	int best_score = min_val;
 
 	if (depth < 1) {
@@ -42,6 +46,14 @@ int Search::maxi(Board &board, int depth, int alpha, int beta) {
 
 	MoveGenerator movegen;
 	movegen.genMoves(board);
+
+	if (movegen.moves.empty()) {
+		if (movegen.kingInCheck(board, WHITE)) {
+			return -mate_score - depth; 
+		}
+		return 0;
+	}
+	sortMoves(movegen.moves);
 	
 	for (Move &m : movegen.moves) {
 		board.makeMove(m);
@@ -55,6 +67,7 @@ int Search::maxi(Board &board, int depth, int alpha, int beta) {
 }
 
 int Search::mini(Board &board, int depth, int alpha, int beta) {
+	assert(board.side_to_move == BLACK);
 	int best_score = max_val;
 
 	if (depth < 1) {
@@ -63,6 +76,14 @@ int Search::mini(Board &board, int depth, int alpha, int beta) {
 
 	MoveGenerator movegen;
 	movegen.genMoves(board);
+
+	if (movegen.moves.empty()) {
+		if (movegen.kingInCheck(board, BLACK)) {
+			return mate_score + depth; 
+		}
+		return 0;
+	}
+	sortMoves(movegen.moves);
 
 	for (Move &m : movegen.moves) {
 		board.makeMove(m);
@@ -73,4 +94,10 @@ int Search::mini(Board &board, int depth, int alpha, int beta) {
 		if (beta <= alpha) break;
 	}
 	return best_score;
+}
+
+void Search::sortMoves(moveList &moves) {
+	std::sort(moves.begin(), moves.end(), [this](const Move &a, const Move &b) {
+		return scoreMove(a) > scoreMove(b);
+	});
 }

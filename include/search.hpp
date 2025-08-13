@@ -6,6 +6,8 @@
 #include "movegen.hpp"
 #include "eval.hpp"
 #include <limits>
+#include <algorithm>
+#include <cassert>
 
 struct BestMove {
 	Move move;
@@ -19,9 +21,10 @@ class Search {
 	private: 
 		int max_val = std::numeric_limits<int>::max();
 		int min_val = std::numeric_limits<int>::min();
-		int mate_score = max_val;
+		int mate_score = 10000;
 		int maxi(Board &board, int depth, int alpha, int beta);
 		int mini(Board &board, int depth, int alpha, int beta);
+		void sortMoves(moveList &moves);
 };
 
 #endif
