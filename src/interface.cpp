@@ -25,6 +25,7 @@ CommandType getCommand(const std::string& cmd) {
     if (cmd == perft_cmd) return CommandType::PERFT;
     if (cmd == setplayer_cmd) return CommandType::SETPLAYER;
     if (cmd == start_cmd) return CommandType::START;
+    if (cmd == stop_cmd) return CommandType::STOP;
     return CommandType::UNKNOWN;
 }
 
@@ -67,7 +68,7 @@ void Interface::gameManager() {
 			break;
 		} else if (current == AI) {
 			//std::cout << "AI thinking...\n";
-			Move ai_move = search.search(board, 6);
+			Move ai_move = search.search(board, 4);
 			std::cout << "AI plays: " << squareToNotation(ai_move.from) 
 					  << squareToNotation(ai_move.to) << "\n";
 			board.makeMove(ai_move);
@@ -117,6 +118,9 @@ void Interface::executeCommand(const std::vector<std::string>& args, bool& quit)
 		case CommandType::START:
 			cmdStart();
 			break;
+		case CommandType::STOP:
+			cmdStop();
+			break;
 		case CommandType::UNKNOWN:
 		default:
 			std::cout << "Unknown command: " << args.at(0) << "\n";
@@ -156,6 +160,14 @@ void Interface::cmdStart() {
 		return;
 	}
 	game_running = true;
+}
+
+void Interface::cmdStop() {
+	if (game_running) {
+		game_running = false;
+		return;
+	}
+	std::cout << "Error: game is not running yet\n";
 }
 
 void Interface::cmdPerft(const std::vector<std::string>& args) {

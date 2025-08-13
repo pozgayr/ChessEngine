@@ -27,6 +27,12 @@ int scoreMove(const Move &m) {
 	return 0;
 }
 
+int drawScore(Board &board, int eval) {
+	if (eval > DRAW_MARGIN)  return -DRAW_CONTEMPT; 
+    if (eval < -DRAW_MARGIN) return +DRAW_CONTEMPT; 
+    return 0;
+}
+
 int pieceSquareTable(int piece, int square) {
 	bool is_black = piece >= 6;
 	int type = piece % 6;

@@ -33,6 +33,7 @@ Move Search::search(Board &board, int depth) {
         else beta = std::min(beta, score);
 		if (alpha >= beta) break;
 	}
+	std::cout << best_move.score << "\n";
 	return best_move.move;
 }
 
@@ -45,14 +46,11 @@ int Search::maxi(Board &board, int depth, int alpha, int beta) {
 	}
 
 	MoveGenerator movegen;
-	movegen.genMoves(board);
+	GameState current_state = movegen.genMoves(board);
 
-	if (movegen.moves.empty()) {
-		if (movegen.kingInCheck(board, WHITE)) {
-			return -mate_score - depth; 
-		}
-		return 0;
-	}
+	if (current_state == CHECKMATE) return -mate_score + depth;
+	else if (current_state == STALEMATE) return drawScore(board, eval(board));;
+
 	sortMoves(movegen.moves);
 	
 	for (Move &m : movegen.moves) {
@@ -75,14 +73,11 @@ int Search::mini(Board &board, int depth, int alpha, int beta) {
 	}
 
 	MoveGenerator movegen;
-	movegen.genMoves(board);
+	GameState current_state = movegen.genMoves(board);
 
-	if (movegen.moves.empty()) {
-		if (movegen.kingInCheck(board, BLACK)) {
-			return mate_score + depth; 
-		}
-		return 0;
-	}
+	if (current_state == CHECKMATE) return mate_score - depth;
+	if (current_state == STALEMATE) return drawScore(board, eval(board));
+	
 	sortMoves(movegen.moves);
 
 	for (Move &m : movegen.moves) {

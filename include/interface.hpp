@@ -24,6 +24,7 @@ const std::string undo_cmd = "undo";
 const std::string perft_cmd = "perft";
 const std::string setplayer_cmd = "player";
 const std::string start_cmd = "start";
+const std::string stop_cmd = "stop";
 const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const std::string pawn_test = "8/8/8/2p5/1P6/8/8/8 w - - 0 1";
 const std::string pawn_promo_test = "2r1r3/3P4/8/8/8/8/8/8 w - - 0 1";
@@ -39,7 +40,7 @@ extern std::unordered_map<std::string, std::string> positionPresets;
 
 enum class CommandType { HELP, POSITION, PRINT, QUIT, MOVE, 
 						 ALLMOVES, SIDE, UNDO, PERFT, SETPLAYER, 
-						 START, UNKNOWN };
+						 START, STOP, UNKNOWN };
 
 const std::unordered_map<char, int> piece_to_index = {
     {'P', 0}, {'N', 1}, {'B', 2}, {'R', 3}, {'Q', 4}, {'K', 5},
@@ -81,6 +82,7 @@ class Interface {
 		void cmdPerft(const std::vector<std::string>& args);
 		void cmdSetPlayer(const std::vector<std::string>& args);
 		void cmdStart();
+		void cmdStop();
 		bool pieceMatches(const Move &move, const std::string &type);
 
 		void gameManager();

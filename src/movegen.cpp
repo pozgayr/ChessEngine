@@ -5,8 +5,8 @@
 
 GameState MoveGenerator::genMoves(Board &board) {
 	moves.clear();
+	pseudo_legal.clear();
 	Color side = board.side_to_move;
-	moveList pseudo_legal;
 	attack_mask = 0ULL;
 
 	MoveGenContext ctx{board, &pseudo_legal, attack_mask, side};
@@ -29,11 +29,54 @@ GameState MoveGenerator::genMoves(Board &board) {
 	GameState current_state = ONGOING;
 	if (moves.empty() && kingInCheck(board, side)) {
 		current_state = CHECKMATE;
-	} else if(moves.empty()) {
+	} else if(moves.empty() || isDraw(board)) {
 		current_state = STALEMATE;
 	}
 	return current_state;
 }
+
+bool MoveGenerator::isDeadPos(const Board &board) {
+	if (board.bitboards[P] | board.bitboards[p] |
+		board.bitboards[Q] | board.bitboards[q] |
+		board.bitboards[R] | board.bitboards[r] ) return false;
+
+	auto pop = [](uint64_t bb) {
+		return (int)std::popcount(bb); 
+	};
+
+	int wN = pop(board.bitboards[N]);
+	int wB = pop(board.bitboards[B]);
+	int bB = pop(board.bitboards[b]);
+	int bN = pop(board.bitboards[n]);
+
+	int w_minors = wN + wB;
+	int b_minors = bN + bB;
+
+	if (w_minors + b_minors <= 1) return true;
+
+	if (w_minors == 1 && b_minors == 1) return true;
+
+	if ((wN == 2 && wB == 0 && b_minors == 0) ||
+       (bN == 2 && bB == 0 && w_minors == 0)) return true;
+
+    return false;
+}
+
+bool MoveGenerator::isDraw(const Board &board) {
+	return isRepetition(board) || isDeadPos(board);
+}
+
+bool MoveGenerator::isRepetition(const Board &board) {
+	uint64_t current_key = board.repetition_stack.back();
+	int count = 0;
+
+	for (int i = (int)board.repetition_stack.size() - 1; i >= 0; i--) {
+		if (board.repetition_stack.at(i) == current_key) {
+			if (++count >= 3) return true; 
+		}
+	}
+	return false;
+} 
 
 bool MoveGenerator::isMoveLegal(const Move &m, Board &board) {
 	Color side = board.side_to_move;

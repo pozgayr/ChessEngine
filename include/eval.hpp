@@ -74,10 +74,13 @@ const int king_table[64] = {
 	-50,-40,-40,-50,-50,-40,-40,-50    
 };
 
+static constexpr int DRAW_CONTEMPT = 1000;
+static constexpr int DRAW_MARGIN = 30;
 
 int eval(Board &board);
 int scoreMove(const Move &m);
 int pieceSquareTable(int piece, int square);
 int mirror(int square);
+int drawScore(Board &board, int eval);
 
 #endif

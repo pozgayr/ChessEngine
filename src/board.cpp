@@ -66,6 +66,9 @@ void Board::setBoard(const std::string& fen) {
 	castling_rights = 0U;
 	enpassant = 0ULL;
 	side_to_move = WHITE;
+	undo_stack.clear();
+	repetition_stack.clear();
+	move_stack.clear();
 	
 	int square = a8;
 	size_t idx = 0;
@@ -196,6 +199,7 @@ void Board::makeMove(const Move& move) {
     }
 	undo_stack.push_back(u);
 	move_stack.push_back(move);
+	repetition_stack.push_back(posKey());
 	
 	castling_rights &= LookupTables::castlingRightsTable[move.from][move.to];
 	side_to_move = static_cast<Color>(!side_to_move);
@@ -207,6 +211,7 @@ void Board::unmakeMove() {
 	undo_stack.pop_back();
 	Move move = move_stack.back();
 	move_stack.pop_back();
+	repetition_stack.pop_back();
 
 	enpassant = u.prev_enpassant;
 	castling_rights = u.prev_castling_rights;
@@ -255,4 +260,28 @@ std::string Board::signature() const {
     sig += std::to_string(castling_rights) + "|";
     sig += std::to_string(side_to_move);
     return sig;
+}
+
+uint64_t Board::posKey() {
+	uint64_t h = 14695981039346656037ULL;
+	constexpr uint64_t FNV_PRIME = 1099511628211ULL; 
+
+	auto mix = [&](uint8_t x) {
+		h ^= x;
+		h *= FNV_PRIME;
+	};
+
+	for (int piece = 0; piece < bitboard_count; piece++) {
+		uint64_t bb = bitboards[piece];
+		while (bb) {
+			int square = __builtin_ctzll(bb);
+			bb &= bb - 1;
+			mix(piece);
+			mix(square);
+		}
+	}
+	mix(side_to_move);
+	mix(castling_rights & 0x0F);
+
+	return h;
 }

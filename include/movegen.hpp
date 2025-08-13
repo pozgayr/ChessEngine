@@ -5,6 +5,7 @@
 #include <vector>
 #include "board.hpp"
 #include "move.hpp"
+#include <bit>
 
 using moveList = std::vector<Move>;
 
@@ -50,14 +51,24 @@ class MoveGenerator {
 		void traverseDirection(int from, const int directions[][2], 
 							   int count, int piece, MoveGenContext &ctx);
 		int findCapturePiece(const Board &board, int to);
+		bool isRepetition(const Board &board);
+		bool isDeadPos(const Board &board);
+		
 						
 	public:
-		std::vector<Move> moves;
+		moveList moves;
+		moveList pseudo_legal;
+		MoveGenerator() {
+		    moves.reserve(256);
+		    pseudo_legal.reserve(256);
+		}
 		uint64_t attack_mask;
 		GameState genMoves(Board &board);
 		bool squareAttacked(const Board &board, Color side, const std::vector<int> &squares);
 		bool kingInCheck(const Board &board, Color side);
 		bool isMoveLegal(const Move &move, Board &board);
+		bool isDraw(const Board &board);
+		
 		
 };
 
