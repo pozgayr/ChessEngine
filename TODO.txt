@@ -1,4 +1,6 @@
 50 move draw
+find a way to test the strenght of the engine
 iterative deepening
 look at minimax
+
 
