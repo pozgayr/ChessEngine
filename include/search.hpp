@@ -21,7 +21,7 @@ class Search {
 	private: 
 		int max_val = std::numeric_limits<int>::max();
 		int min_val = std::numeric_limits<int>::min();
-		int mate_score = 10000;
+		int mate_score = max_val;
 		int maxi(Board &board, int depth, int alpha, int beta);
 		int mini(Board &board, int depth, int alpha, int beta);
 		void sortMoves(moveList &moves);

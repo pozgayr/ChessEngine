@@ -1,0 +1,4 @@
+50 move draw
+iterative deepening
+look at minimax
+

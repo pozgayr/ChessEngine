@@ -51,9 +51,7 @@ int numberFromSquare(std::string);
 class Board {
 	private:
 		void updateOccupancies();
-		void setBit(uint64_t &bb, int square);
-		std::vector<Move> move_stack;
-		
+		void setBit(uint64_t &bb, int square);		
 		
 	public:
 		uint64_t bitboards[bitboard_count] = {0};
@@ -61,8 +59,10 @@ class Board {
 		uint64_t enpassant = 0;
 		unsigned int castling_rights = 0;
 		Color side_to_move = WHITE;
+		
 		std::vector<Undo> undo_stack;
 		std::vector<uint64_t> repetition_stack;
+		std::vector<Move> move_stack;
 		
 		void printBoard(int bitboard_index = -1);
 		void setBoard(const std::string& fen);

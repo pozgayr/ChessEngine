@@ -1,6 +1,8 @@
 #include "eval.hpp"
 
+
 int eval(Board &board) {
+	MoveGenerator movegen;
 	int score = 0;
 	
 	for (int piece = 0; piece < bitboard_count; piece++) {
@@ -13,18 +15,29 @@ int eval(Board &board) {
 			score += sign * (value + square_bonus);
 			bb &= bb - 1;
 		}
-	} 
+	}
+
+	if (movegen.kingInCheck(board, WHITE)) score -= CHECK_BONUS;
+	if (movegen.kingInCheck(board, BLACK)) score += CHECK_BONUS;
+
+	if (!board.move_stack.empty()) {
+       const Move &lastMove = board.move_stack.back();
+       if (lastMove.capture != NONE) {
+           score += CAPTURE_BONUS[lastMove.capture];
+       }
+   	}
 	return score;
 }
 
 int scoreMove(const Move &m) {
-	if (m.capture != NONE) {
-		return 100 * piece_values[m.capture] - piece_values[m.piece];
-	}
+	int score = 0;
 	if (m.promotion) {
-		return 1000 + piece_values[m.promotion];
-	} 
-	return 0;
+		score += 1000 + piece_values[m.promotion];
+	}
+	if (m.capture != NONE) {
+		score += 500 * piece_values[m.capture] - piece_values[m.piece];
+	}
+	return score;
 }
 
 int drawScore(Board &board, int eval) {

@@ -2,6 +2,7 @@
 #define EVAL_HPP
 
 #include "board.hpp"
+#include "movegen.hpp"
 
 constexpr int piece_values[] = {
     100, 320, 330, 500, 900, 20000,   
@@ -74,8 +75,14 @@ const int king_table[64] = {
 	-50,-40,-40,-50,-50,-40,-40,-50    
 };
 
+constexpr int CAPTURE_BONUS[12] = {
+    20,  40,  40,  60, 100, 0, 
+    -20,  -40,  -40,  -60, -100, 0  
+};
+
 static constexpr int DRAW_CONTEMPT = 1000;
 static constexpr int DRAW_MARGIN = 30;
+static constexpr int CHECK_BONUS = 100;
 
 int eval(Board &board);
 int scoreMove(const Move &m);
