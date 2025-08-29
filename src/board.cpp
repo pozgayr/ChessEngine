@@ -65,6 +65,7 @@ void Board::setBoard(const std::string& fen) {
 	for (int i = 0; i < occupancy_count; i++) occupancies[i] = 0;
 	castling_rights = 0U;
 	enpassant = 0ULL;
+	half_move_clock = 0;
 	side_to_move = WHITE;
 	undo_stack.clear();
 	repetition_stack.clear();
@@ -133,7 +134,22 @@ void Board::setBoard(const std::string& fen) {
 		int enpassant_square = Interface::notationToSquare(enpassant_square_str);
 		enpassant = 1ULL << enpassant_square;
 		idx += 2;
+	} else {
+		idx++;
 	}
+	
+	while (fen[idx] == ' ') {
+		idx++;
+	}
+	
+	std::string half_move_string;
+	while (idx < fen.size() && fen[idx] != ' ') {
+		half_move_string.push_back(fen[idx]);
+		idx++;
+	}
+	std::cout << half_move_string << "\n";
+	half_move_clock = std::stoi(half_move_string);
+	
 	updateOccupancies();
 }
 
@@ -144,6 +160,7 @@ void Board::makeMove(const Move& move) {
 	u.captured_piece = NONE;
 	u.prev_castling_rights = castling_rights;
 	u.prev_enpassant = enpassant;
+	u.prev_clock = half_move_clock;
 	bitboards[move.piece] &= ~(1ULL << move.from); //remove from original position
 
 	for (int i = 0; i < bitboard_count; i++) {
@@ -153,6 +170,17 @@ void Board::makeMove(const Move& move) {
 			break;
 		}
 	}
+	
+	bool capture = u.captured_piece != NONE;
+	bool is_pawn = (move.piece == P) || (move.piece == p);
+
+	if (capture || is_pawn) {
+		half_move_clock = 0;
+	}
+	else {
+		half_move_clock++;
+	}
+	
 
 	if (!move.promotion) {
 		bitboards[move.piece] |= (1ULL << move.to); //place piece
@@ -215,6 +243,7 @@ void Board::unmakeMove() {
 
 	enpassant = u.prev_enpassant;
 	castling_rights = u.prev_castling_rights;
+	half_move_clock = u.prev_clock;
 
 	int moved_piece = (move.promotion) ? move.promotion : move.piece;
 	bitboards[moved_piece] &= ~(1ULL << move.to);

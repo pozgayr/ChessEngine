@@ -19,7 +19,7 @@ struct Move {
     }
     
 	std::string toString() const {
-		static const char files[] = "abcdefgh";
+		static const char files[] = "abcdefgh"; 
 		static const char ranks[] = "12345678";
 		return std::string() +
 		    files[from % 8] + ranks[from / 8] +

@@ -63,7 +63,7 @@ bool MoveGenerator::isDeadPos(const Board &board) {
 }
 
 bool MoveGenerator::isDraw(const Board &board) {
-	return isRepetition(board) || isDeadPos(board);
+	return isRepetition(board) || isDeadPos(board) || board.half_move_clock >= 50;
 }
 
 bool MoveGenerator::isRepetition(const Board &board) {

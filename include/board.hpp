@@ -38,6 +38,7 @@ enum Square {
 
 struct Undo {
 	int captured_piece;
+	int prev_clock = 0;
 	unsigned int prev_castling_rights;
 	uint64_t prev_enpassant;
 };
@@ -59,6 +60,7 @@ class Board {
 		uint64_t enpassant = 0;
 		unsigned int castling_rights = 0;
 		Color side_to_move = WHITE;
+		int half_move_clock = 0;
 		
 		std::vector<Undo> undo_stack;
 		std::vector<uint64_t> repetition_stack;
